@@ -7,9 +7,9 @@ Date: 28-02-2019
 
 Add variant statistics from bam file to vcf.
 Works on both germline and somatic variants.
-Users are advised to run pileup tools to generate pileup file. 
-An example to run: 
-samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa bam_file > pileup_file
+Users are advised to run mpileup tools to generate mpileup file. 
+An example to run:
+samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa bam_file > mpileup_file
 """
 
 ###############################################################################
@@ -22,22 +22,22 @@ from variant import Variant, BAM_STATS_LINES
 
 ###############################################################################
 
-def create_pileup_dict(pileup):
-    """Use the pileup file to create a dictionary
-       {'chr\tpos':pileup_line}
+def create_mpileup_dict(mpileup):
+    """Use the mpileup file to create a dictionary
+       {'chr\tpos':mpileup_line}
     """
     try:
-        f = open(pileup, 'r')
+        f = open(mpileup, 'r')
     except:
-        sys.exit('Failed to open file {}'.format(pileup))
-    pileup_dict = {}
-    with open(pileup, 'r') as f:
+        sys.exit('Failed to open file {}'.format(mpileup))
+    mpileup_dict = {}
+    with open(mpileup, 'r') as f:
         for line in f:
             line = line.split()
-            # clean up the start or end of read from pileup line
+            # clean up the start or end of read from mpileup line
             line[4] = re.sub(r'(\^.|\$)', '', line[4])
-            pileup_dict.update({'\t'.join(line[:2]): line[3:5]})
-    return pileup_dict
+            mpileup_dict.update({'\t'.join(line[:2]): line[3:5]})
+    return mpileup_dict
 
 ###############################################################################
 
@@ -53,11 +53,11 @@ required.add_argument("-o", help="output vcf", required=True)
 required.add_argument("--type", help="must be either germline or somatic",
                       required=True)
 parser._action_groups.append(optional)
-required.add_argument("--pileup", help="Pileup file extracted from bam \
+required.add_argument("--mpileup", help="mpileup file extracted from bam \
                       file", required=False)
-required.add_argument("--normal_pileup", help="Pileup file extracted from the normal sample bam, \
+required.add_argument("--normal_mpileup", help="mpileup file extracted from the normal sample bam, \
                       required if input is somatic vcf", required=False)
-required.add_argument("--tumor_pileup", help="Pileup file extracted from the tumor sample, \
+required.add_argument("--tumor_mpileup", help="mpileup file extracted from the tumor sample, \
                       required if input is somatic vcf", required=False)
 required.add_argument("--normal_id", help="Normal sample id, \
                       required if input is somatic vcf", required=False)
@@ -76,24 +76,24 @@ else:
 if args.type != 'germline' and args.type != 'somatic':
     sys.exit('vcf type not recognised')
 elif args.type == 'germline':
-    if not args.pileup:
-        sys.exit('pileup file not specified for germline vcf')
-    elif not args.pileup.endswith('.pileup'):
-        sys.exit('{} is not in pileup format'.format(args.pileup))
+    if not args.mpileup:
+        sys.exit('mpileup file not specified for germline vcf')
+    elif not args.mpileup.endswith('.mpileup'):
+        sys.exit('{} is not in mpileup format'.format(args.mpileup))
     else:
         try:
-            f = open(args.pileup, 'r')
+            f = open(args.mpileup, 'r')
         except:
-            sys.exit('Failed to open file {}'.format(args.pileup))
+            sys.exit('Failed to open file {}'.format(args.mpileup))
 elif args.type == 'somatic':
-    if not args.normal_pileup:
-        sys.exit('normal pileup file is required for somatic vcf')
-    elif not args.normal_pileup.endswith('.pileup'):
-        sys.exit('{} is not in pileup format'.format(args.normal_pileup))
-    elif not args.tumor_pileup:
-        sys.exit('tumor pileup file is required for somatic vcf')
-    elif not args.tumor_pileup.endswith('.pileup'):
-        sys.exit('{} is not in pileup format'.format(args.tumor_pileup))
+    if not args.normal_mpileup:
+        sys.exit('normal mpileup file is required for somatic vcf')
+    elif not args.normal_mpileup.endswith('.mpileup'):
+        sys.exit('{} is not in mpileup format'.format(args.normal_mpileup))
+    elif not args.tumor_mpileup:
+        sys.exit('tumor mpileup file is required for somatic vcf')
+    elif not args.tumor_mpileup.endswith('.mpileup'):
+        sys.exit('{} is not in mpileup format'.format(args.tumor_mpileup))
     elif not args.normal_id:
         sys.exit('normal sample id is required for somatic vcf')
     elif not args.tumor_id:
@@ -104,10 +104,10 @@ elif args.type == 'somatic':
 
 vcf_in = args.i
 vcf_out = args.o
-pileup_in = args.pileup
+mpileup_in = args.mpileup
 vcf_type = args.type
-normal_pileup = args.normal_pileup
-tumor_pileup = args.tumor_pileup
+normal_mpileup = args.normal_mpileup
+tumor_mpileup = args.tumor_mpileup
 normal_id = args.normal_id
 tumor_id = args.tumor_id
 
@@ -115,9 +115,9 @@ tumor_id = args.tumor_id
 
 if vcf_type == 'germline':
 
-    # Read the pileup file, and store into dictionary
-    # Due to multi-allelic variants, need to read the whole pileup file in first
-    pileup_dict = create_pileup_dict(pileup_in)
+    # Read the mpileup file, and store into dictionary
+    # Due to multi-allelic variants, need to read the whole mpileup file in first
+    mpileup_dict = create_mpileup_dict(mpileup_in)
 
     with open(vcf_in, 'r') as f_vcf, open(vcf_out, 'w') as f_vcf_out:
         for line in f_vcf:
@@ -133,16 +133,16 @@ if vcf_type == 'germline':
             # Calcualte bam stats for variants
             else:
                 variant = Variant().read_variant(line)
-                pileup = pileup_dict.get('\t'.join([variant.chr, variant.pos]),
+                mpileup = mpileup_dict.get('\t'.join([variant.chr, variant.pos]),
                                          '')
-                bam_stats = variant.cal_bam_stats(pileup)
+                bam_stats = variant.cal_bam_stats(mpileup)
                 variant = variant.add_bam_stats(bam_stats)
                 f_vcf_out.write(variant.write())
 
 else:
 
-    normal_pileup_dict = create_pileup_dict(normal_pileup)
-    tumor_pileup_dict = create_pileup_dict(tumor_pileup)
+    normal_mpileup_dict = create_mpileup_dict(normal_mpileup)
+    tumor_mpileup_dict = create_mpileup_dict(tumor_mpileup)
 
     with open(vcf_in, 'r') as vcf_i, open(vcf_out, 'w') as vcf_o:
         for line in vcf_i:
@@ -167,12 +167,12 @@ else:
                 variant = Variant().read_variant(line, somatic=True,
                                                  normal=normal_index,
                                                  tumor=tumor_index)
-                normal_pileup = normal_pileup_dict.get('\t'.join([variant.chr,
+                normal_mpileup = normal_mpileup_dict.get('\t'.join([variant.chr,
                                                        variant.pos]), '')
-                tumor_pileup = tumor_pileup_dict.get('\t'.join([variant.chr,
+                tumor_mpileup = tumor_mpileup_dict.get('\t'.join([variant.chr,
                                                      variant.pos]), '')
-                normal_bam_stats = variant.cal_bam_stats(normal_pileup)
-                tumor_bam_stats = variant.cal_bam_stats(tumor_pileup)
+                normal_bam_stats = variant.cal_bam_stats(normal_mpileup)
+                tumor_bam_stats = variant.cal_bam_stats(tumor_mpileup)
                 variant = variant.add_bam_stats([normal_bam_stats,
                                                 tumor_bam_stats],
                                                 somatic=True)
