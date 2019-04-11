@@ -1,7 +1,7 @@
 import sys
 from collections import OrderedDict as od
-from class_vcfheader import VcfHeader, extract_cols, extract_cols_somatic
-from class_variant import Variant
+from vcfheader import VcfHeader, extract_cols, extract_cols_somatic
+from variant import Variant
 
 ##############################################################################
 
