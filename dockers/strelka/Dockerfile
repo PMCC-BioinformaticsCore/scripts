@@ -3,12 +3,6 @@
 FROM ubuntu:16.04
 MAINTAINER Michael Franklin <michael.franklin@petermac.org>
 
-ENV STRELKA_VERSION 2.9.10
-
-LABEL \
-  version="2.9.10" \
-  description="Strelka image for use in Workflows"
-
 RUN apt-get update -qq && \
 	apt-get install -y -qq \
 		bzip2 \
@@ -20,6 +14,12 @@ RUN apt-get update -qq && \
 		zlib1g-dev
 
 ENV STRELKA_INSTALL_DIR /opt/strelka/
+
+ENV STRELKA_VERSION 2.9.9
+
+LABEL \
+  version="2.9.9" \
+  description="Strelka image for use in Workflows"
 
 RUN wget https://github.com/Illumina/strelka/releases/download/v${STRELKA_VERSION}/strelka-${STRELKA_VERSION}.release_src.tar.bz2 \
   && tar -xjf strelka-${STRELKA_VERSION}.release_src.tar.bz2 \
