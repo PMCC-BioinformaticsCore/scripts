@@ -31,14 +31,13 @@ parser = argparse.ArgumentParser(description='Extracts and combines the \
                                  into one')
 optional = parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
-required.add_argument("-i",  help="input vcfs, the priority of the vcfs will \
-                      be based on the order of the input", nargs='+',
-                      required=True)
-required.add_argument("--columns", help="Columns to keep, seperated by space",
-                      nargs='+', required=True)
+required.add_argument("-i",  help="input vcfs, the priority of the vcfs will be \
+                      based on the order of the input. This parameter can be \
+                      specified more than once", action='append', required=True)
+required.add_argument("--columns", help="Columns to keep. This parameter can \
+                      be specified more than once", action='append', required=True)
 required.add_argument("-o", help="output vcf (unsorted)", required=True)
-required.add_argument("--type", help="must be either germline or somatic",
-                      required=True)
+required.add_argument("--type", help="must be either germline or somatic", required=True)
 parser._action_groups.append(optional)
 required.add_argument("--regions", help="Region file containing all the \
                       variants, used as samtools mpileup", required=False)
@@ -47,8 +46,7 @@ required.add_argument("--normal", help="Sample id of germline vcf, or normal \
 required.add_argument("--tumor", help="tumor sample ID, required if inputs are \
                       somatic vcfs", required=False)
 required.add_argument("--priority", help="The priority of the callers, must match \
-                      with the callers in the source header", nargs='+',
-                      required=False)
+                      with the callers in the source header", nargs='+', required=False)
 args = parser.parse_args()
 
 # Input sanity check
