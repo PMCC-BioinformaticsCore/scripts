@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser(description='Extracts and combines the \
 optional = parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
 required.add_argument("-i",  help="input vcfs, the priority of the vcfs will \
-                      be based on the order of the input", nargs='+',
+                      be based on the order of the input", action='append',
                       required=True)
 required.add_argument("--columns", help="Columns to keep, seperated by space",
                       nargs='+', required=True)
