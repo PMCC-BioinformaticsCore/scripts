@@ -1,0 +1,23 @@
+* List of files:
+
+Scripts:
+- combine_vcf.py: Combine multiple vcfs (called from the same sample) into one. Variant callers are marked with "Identified=" in INFO. Offer options to select columns (INFO/FORMAT) to include.
+- add_bam_stats.py: Add variants statistics from bam file (mpileup)
+
+Supporting classes:
+- normalisedvcf.py: For parsing vcfs
+- variant.py: For parsing variants
+- vcfheader.py: For parsing headers
+
+Usage examples:
+For germline vcfs
+python3 combine_vcf.py -i vcf1 -i vcf2 -i vcf3 --columns AD --columns DP --columns GT -o combined.vcf --type germline --regions regions.tsv
+samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa sample.bam > regions.mpileup
+bcftools sort combined.vcf -o combined.sorted.vcf
+python3 add_bam_stats.py -i combined.sorted.vcf -o combined.sorted.addbamstats.vcf --type germline -mpileup sample.mpileup
+For somatic vcfs
+python combine_vcf.py -i vcf1 -i vcf2 -i vcf3 --columns AD --columns DP --columns GT -o combined.vcf --type somatic --regions regions.tsv --normal_id normal --tumor_id tumor
+samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa sample_normal.bam > normal.mpileup
+samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa sample_tumor.bam > tumor.mpileup
+bcftools sort combined.vcf -o combined.sorted.vcf python3 add_bam_stats.py -i combined.sorted.vcf -o combined.sorted.addbamstats.vcf --type somatic --normal_id normal --tumor_id tumor --normal_mpileup normal.mpileup --tumor_mpileup tumor.mpileup
+
