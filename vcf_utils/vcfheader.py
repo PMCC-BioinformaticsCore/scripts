@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 
 GT_LINE = '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">'
-STATS_HEADER = ['##INFO=<ID=Identified,Number=1,Type=String, Description="Source \
+STATS_HEADER = ['##INFO=<ID=Identified,Number=1,Type=String,Description="Source \
 VCF for the merged record">\n',
                 '##INFO=<ID=AD_mean,Number=1,Type=Float,Description="Mean of \
 allelic depths in source vcfs">\n',
@@ -60,11 +60,13 @@ def extract_cols(i_dict, f_dict, cols):
         i_header, f_header = i_dict.get(col), f_dict.get(col)
         if i_header:
             i_cols.update({col: i_header})
-        # Put the caller's AD and DP in INFO
-        if f_header and (f_header.meta_id in ['AD', 'DP']):
+        #if f_header and (f_header.meta_id in ['AD', 'DP']):
+        # Move all the FORMAT columns (except GT) to INFO
+        if f_header and (f_header.meta_id != "GT"):
             f_header.meta = 'INFO'
             i_cols.update({col: f_header})
-        elif f_header:
+        # If "GT" specified, keep the GT in the FORMAT
+        elif f_header and (f_header.meta_id == "GT"):
             f_cols.update({col: f_header})
     return i_cols, f_cols
 
@@ -146,3 +148,4 @@ class VcfHeader:
         return ('##{}=<ID={},Number={},Type={},Description="{}">\n'
                 .format(self.meta, self.meta_id, self.meta_number,
                         self.meta_type, self.meta_description))
+

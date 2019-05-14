@@ -10,6 +10,11 @@ callers, combine to one vcf, and calcualte mean and standard deviation of AD and
 Works on germline and somatic vcfs.
 Warning: the output vcf is not sorted by chromosome and position, users are advised to use other tools to sort this vcf. (Example: bcftools sort vcf -o sorted_vcf)
          Tested on HaplotypeCaller and Mutect2 (gatk 4.0.10.0), strelka (2.9.2) and vardict (1.5.1)
+
+Notes on how the columns are being parsed:
+-- AD/DP: INFO value overwritten by FORMAT value (if FORMAT value exists), in the process_(somatic_)variant
+-- GT: The only enfored column in FORMAT
+-- Other columns: extract_cols moves FORMAT column names to INFO; select_info finds column values from variants
 """
 
 ###############################################################################

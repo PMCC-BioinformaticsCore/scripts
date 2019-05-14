@@ -213,7 +213,10 @@ class Variant:
         if not somatic:
             for k, v in i_dict.items():
                 info = self.info.get(k, '')
-                new_info[v.meta_id] = info
+                if info:
+                    new_info[v.meta_id] = info
+                else:
+                    new_info[v.meta_id] = self.format.get(k, '')
             for k, v in f_dict.items():
                 new_format[v.meta_id] = self.format.get(k, '')
 
@@ -401,3 +404,4 @@ class Variant:
             return ('\t'.join(self.mandatory + [';'.join(info_), ':'.join(
                     format_names), ':'.join(normal_format_vals), ':'.join(
                     tumor_format_vals)]) + '\n')
+
