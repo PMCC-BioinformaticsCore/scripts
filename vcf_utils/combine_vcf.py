@@ -40,7 +40,7 @@ required.add_argument("-i",  help="input vcfs, the priority of the vcfs will be 
                       based on the order of the input. This parameter can be \
                       specified more than once", action='append', required=True)
 required.add_argument("--columns", help="Columns to keep. This parameter can \
-                      be specified more than once", action='append', required=True)
+                      be specified more than once", nargs='+', required=True)
 required.add_argument("-o", help="output vcf (unsorted)", required=True)
 required.add_argument("--type", help="must be either germline or somatic", required=True)
 parser._action_groups.append(optional)
