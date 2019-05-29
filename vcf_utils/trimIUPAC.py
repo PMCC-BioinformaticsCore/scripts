@@ -1,3 +1,16 @@
+#!/usr/bin/python3
+
+"""
+Title: combine_vcf
+Author: Jiaan Yu / Michael Franklin
+Date: 29-05-2019
+Modified: 30-05-2019 (Michael Franklin)
+
+Substitute 'W|K|Y|R|S|M' with 'N'
+"""
+
+###############################################################################
+
 import sys
 import re
 import os
