@@ -64,9 +64,7 @@ class NormalisedVcf:
         # Read the meta-information lines from the vcf
         for line in vcf:
             # Handle exceptions: the AF will be calcualted regardless;
-            # Only extract the (filtered) DP in the format
-            if (line.startswith('##INFO=<ID=DP') or
-               line.startswith('##FORMAT=<ID=AF')):
+            if line.startswith('##FORMAT=<ID=AF'):
                 pass
             # Select the INFO/FORMAT lines
             elif line.startswith('##FORMAT'):
@@ -82,6 +80,9 @@ class NormalisedVcf:
                 self.meta_info.append(line)
             else:
                 break
+            # Only extract the (filtered) DP in the format
+            if "DP" in info_dict.keys() and format_dict.keys():
+                info_dict.pop("DP", None)
 
         if not self.caller:
             sys.exit("Cannot identify caller from file {}\nPlease add caller \
@@ -94,6 +95,7 @@ class NormalisedVcf:
 
         # Select the columns from INFO/FORMAT
         info_cols, format_cols = extract_cols(info_dict, format_dict, cols)
+
         # Add the INFO line (with caller) / FORMAT (unchanged) to header_list
         self.meta_info += [VcfHeader.write(VcfHeader.add_caller(v,
                            self.caller)) for k, v in info_cols.items()]
@@ -198,3 +200,4 @@ class NormalisedVcf:
                                       cleaned_variant})
 
         return self
+

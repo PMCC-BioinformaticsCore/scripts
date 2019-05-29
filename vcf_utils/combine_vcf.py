@@ -11,14 +11,24 @@ callers, combine to one vcf, and calcualte mean and standard deviation of AD and
 Works on germline and somatic vcfs.
 Warning: the output vcf is not sorted by chromosome and position, users are advised to use other tools to sort this vcf. (Example: bcftools sort vcf -o sorted_vcf)
          Tested on HaplotypeCaller and Mutect2 (gatk 4.0.10.0), strelka (2.9.2) and vardict (1.5.1)
+
+Notes on how the columns are being parsed:
+-- AD/DP: INFO value overwritten by FORMAT value (if FORMAT value exists), in the process_(somatic_)variant
+-- GT: The only enfored column in FORMAT
+-- Other columns: extract_cols moves FORMAT column names to INFO; select_info finds column values from variants
 """
 
 ###############################################################################
 
 import os
 import sys
+<<<<<<< HEAD
 import argparse
 from collections import OrderedDict, defaultdict as dd
+=======
+from collections import OrderedDict, defaultdict as dd, Counter
+from itertools import combinations
+>>>>>>> c1889550c3d9c941432671dd16940883b91fd285
 from normalisedvcf import NormalisedVcf, sort_vcf
 from variant import Variant
 from vcfheader import STATS_HEADER, SOMATIC_STATS_HEADER, HEADER
@@ -197,6 +207,24 @@ else:
                                vcf_list[i].variants[v_key], columns_to_keep,
                                callers_names, info_dict, somatic=True)
             combined_f.write(Variant.write(combined_variant, somatic=True))
+
+# Output combine varaints summary
+# Count the number of variants 
+summary = Counter([tuple(v) for v in variant_to_vcf_dict.values()])
+summary_count = []
+# Output the combinations of the callers
+for i, caller in enumerate(callers):
+    if i == 0:
+        summary_header = [caller for caller in callers]
+    else:
+        for j in list(combinations(callers, i+1)):
+            summary_header.append('-'.join(j))
+for i in range(len(callers)+1):
+    for j in list(combinations(range(len(callers)), i+1)):
+        summary_count.append(str(summary[j]))
+with open("Combine_variants_summary.tsv", "w") as f:
+    f.write('\t'.join(summary_header) + '\n')
+    f.write('\t'.join(summary_count) + '\n')
 
 # Write variant location file for samtools pileup
 if regions:
