@@ -65,20 +65,22 @@ input_files = args.i
 invalid_files = [f for f in input_files if not os.path.exists(f)]
 has_invalid_files = len(invalid_files) > 0
 if has_invalid_files:
-    sys.exit(f"There were files that could not be found on disk \
-        ({len(invalid_files)}/{len(input_files)}): " + ", ".join(invalid_files))
+    ninvalid = len(invalid_files)
+    nall = len(input_files)
+
+    sys.exit("There were files that could not be found on disk (%s/%s): %" % (ninvalid, nall, ", ".join(invalid_files)))
 
 has_duplicates = len(input_files) != len(set(input_files))
 
 if has_duplicates:
     sys.exit("There are duplicates in the input vcfs, please specify again")
 if args.priority and len(input_files) != len(args.priority):
-    sys.exit(f"The number of vcfs ({len(input_files)}) does not match with the number of callers in priority ({len(args.priority)})")
+    sys.exit("The number of vcfs (%s) does not match with the number of callers in priority (%s)" % (len(input_files), len(args.priority)))
 
 if args.type not in recognised_modes:
-    sys.exit(f"The mode "{args.type}" was not recognised, must be one of: " + ", ".join(recognised_modes))
+    sys.exit("The mode '{s}' was not recognised, must be one of: %s" % (args.type, ", ".join(recognised_modes)))
 
-f args.type == "somatic" and not (args.normal and args.tumor):
+if args.type == "somatic" and not (args.normal and args.tumor):
     sys.exit("normal and tumor ids are required for somatic vcfs")
 
 ###############################################################################
