@@ -14,6 +14,11 @@ Substitute 'W|K|Y|R|S|M' with 'N'
 import sys
 import re
 import os
+import json
+
+# We'll filter out the characters listed in this set:
+# https://en.wikipedia.org/wiki/Nucleic_acid_notation
+character_set = ["W", "S", "M", "K", "R", "Y", "B", "D", "H", "V", "N", "Z"]
 
 USAGE="USAGE: %s <inVcf> <outVcf>\n\nTake out ambiguity (IUPAC) codes in REF and ALT columns by converting them to Ns.\n\n" % sys.argv[0]
 
@@ -32,16 +37,22 @@ if os.path.exists(outpath):
     print("\033[91mA file already exists at the output path '%s'\033[0m" % outpath)
     sys.exit(1)
 
+replacements = 0
+replacement_dict = {
+    # $line: { indRef: prev, indAlt: prev }
+}
+
+line_number = 0
 
 with open(inpath) as inputfp, open(outpath,'w') as outputfp:
     extrahead_elems = []
 
-
     indRef = None   # header.index("REF")
     indAlt = None   # header.index("ALT")
 
-    p = re.compile("W|K|Y|R|S|M")
+    p = re.compile("|".join(character_set))
     for line in inputfp:
+        line_number += 1    # was started at 0, so lines will start at 1
 
         if line.startswith("##"):
             # just stream the header to new file
@@ -56,7 +67,27 @@ with open(inpath) as inputfp, open(outpath,'w') as outputfp:
             indRef = processed.index("REF")
             indAlt = processed.index("ALT")
         else:
-            processed[indRef]=p.sub("N", processed[indRef])
-            processed[indAlt]=p.sub("N", processed[indAlt])
+            lIndRef, lIndAlt = processed[indRef], processed[indAlt]
+            has_indRefMatch = p.match(lIndRef)
+            has_indAltMatch = p.match(lIndAlt)
+            if has_indRefMatch or has_indAltMatch:
+                d = {}
+                if has_indRefMatch:
+                    d["indRef"] = lIndRef
+                    processed[indRef] = p.sub("N", str(lIndRef))
+
+                if has_indAltMatch:
+                    d["indAlt"] = lIndAlt                
+                    processed[indAlt] = p.sub("N", str(lIndAlt))
+
+                replacement_dict[line_number] = d
+                replacements += len(d)
 
         outputfp.write("\t".join(processed) + "\n")
+
+with open("stats.json", "w+") as stats:
+    json.dump({
+        "total": replacements,
+        "replacements": replacement_dict
+    }, stats)
+
