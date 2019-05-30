@@ -22,13 +22,9 @@ Notes on how the columns are being parsed:
 
 import os
 import sys
-<<<<<<< HEAD
 import argparse
-from collections import OrderedDict, defaultdict as dd
-=======
 from collections import OrderedDict, defaultdict as dd, Counter
 from itertools import combinations
->>>>>>> c1889550c3d9c941432671dd16940883b91fd285
 from normalisedvcf import NormalisedVcf, sort_vcf
 from variant import Variant
 from vcfheader import STATS_HEADER, SOMATIC_STATS_HEADER, HEADER
@@ -78,7 +74,7 @@ if has_invalid_files:
     ninvalid = len(invalid_files)
     nall = len(input_files)
 
-    sys.exit("There were files that could not be found on disk (%s/%s): %" % (ninvalid, nall, ", ".join(invalid_files)))
+    sys.exit("There were files that could not be found on disk (%s/%s): %s" % (ninvalid, nall, ", ".join(invalid_files)))
 
 has_duplicates = len(input_files) != len(set(input_files))
 
@@ -88,7 +84,7 @@ if args.priority and len(input_files) != len(args.priority):
     sys.exit("The number of vcfs (%s) does not match with the number of callers in priority (%s)" % (len(input_files), len(args.priority)))
 
 if args.type not in recognised_modes:
-    sys.exit("The mode '{s}' was not recognised, must be one of: %s" % (args.type, ", ".join(recognised_modes)))
+    sys.exit("The mode '{%s}' was not recognised, must be one of: %s" % (args.type, ", ".join(recognised_modes)))
 
 if args.type == "somatic" and not (args.normal and args.tumor):
     sys.exit("normal and tumor ids are required for somatic vcfs")
@@ -213,6 +209,8 @@ else:
 summary = Counter([tuple(v) for v in variant_to_vcf_dict.values()])
 summary_count = []
 # Output the combinations of the callers
+summary_header = []
+
 for i, caller in enumerate(callers):
     if i == 0:
         summary_header = [caller for caller in callers]
