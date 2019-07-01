@@ -4,6 +4,7 @@
 Title: combine_vcf
 Author: Jiaan Yu
 Date: 28-02-2019
+Modified: 29-05-2019 (Michael Franklin)
 
 Extract (and normalise) information from input vcfs coming from different
 callers, combine to one vcf, and calcualte mean and standard deviation of AD and DP if specified.
@@ -19,8 +20,9 @@ Notes on how the columns are being parsed:
 
 ###############################################################################
 
-import argparse
+import os
 import sys
+import argparse
 from collections import OrderedDict, defaultdict as dd, Counter
 from itertools import combinations
 from normalisedvcf import NormalisedVcf, sort_vcf
@@ -30,20 +32,23 @@ from vcfheader import STATS_HEADER, SOMATIC_STATS_HEADER, HEADER
 ###############################################################################
 
 # Building API
+recognised_modes = ["germline", "somatic"]
+
 
 # required and optional arguments
-parser = argparse.ArgumentParser(description='Extracts and combines the \
+parser = argparse.ArgumentParser(description="Extracts and combines the \
                                  information from germline / somatic vcfs \
-                                 into one')
+                                 into one")
 optional = parser._action_groups.pop()
-required = parser.add_argument_group('required arguments')
+required = parser.add_argument_group("required arguments")
 required.add_argument("-i",  help="input vcfs, the priority of the vcfs will be \
                       based on the order of the input. This parameter can be \
-                      specified more than once", action='append', required=True)
+                      specified more than once", action="append", required=True)
 required.add_argument("--columns", help="Columns to keep. This parameter can \
-                      be specified more than once", nargs='+', required=True)
+                      be specified more than once", action="append", required=True)
 required.add_argument("-o", help="output vcf (unsorted)", required=True)
-required.add_argument("--type", help="must be either germline or somatic", required=True)
+required.add_argument("--type", help="must be either germline or somatic", required=True,
+                      choices=recognised_modes)
 parser._action_groups.append(optional)
 required.add_argument("--regions", help="Region file containing all the \
                       variants, used as samtools mpileup", required=False)
@@ -52,32 +57,37 @@ required.add_argument("--normal", help="Sample id of germline vcf, or normal \
 required.add_argument("--tumor", help="tumor sample ID, required if inputs are \
                       somatic vcfs", required=False)
 required.add_argument("--priority", help="The priority of the callers, must match \
-                      with the callers in the source header", nargs='+', required=False)
+                      with the callers in the source header", nargs="+", required=False)
 args = parser.parse_args()
 
-# Input sanity check
+# Sanity check number of inputs
 if len(args.i) < 1:
-    sys.exit('Input vcfs must be at least one')
-else:
-    for filename in args.i:
-        if not filename.endswith('.vcf'):
-            sys.exit('{} is not a vcf'.format(filename))
-        else:
-            try:
-                fhandle = open(filename, 'r')
-            except:
-                sys.exit('Failed to open file {}'.format(filename))
-    if len(args.i) != len(set(args.i)):
-        sys.exit('There are duplicates in the input vcfs, please specify \
-again')
-    if args.priority:
-        if len(args.i) != len(args.priority):
-            sys.exit('The number of vcfs does not match with the number of \
-callers in priority')
-if args.type != 'germline' and args.type != 'somatic':
-    sys.exit('Type not recognised, must be germline or somatic]')
-elif args.type == 'somatic' and not (args.normal and args.tumor):
-    sys.exit('normal and tumor ids are required for somatic vcfs')
+    sys.exit("There must be at least 1 VCF file")
+
+
+# Check to make sure all of the files exist
+input_files = args.i
+
+invalid_files = [f for f in input_files if not os.path.exists(f)]
+has_invalid_files = len(invalid_files) > 0
+if has_invalid_files:
+    ninvalid = len(invalid_files)
+    nall = len(input_files)
+
+    sys.exit("There were files that could not be found on disk (%s/%s): %s" % (ninvalid, nall, ", ".join(invalid_files)))
+
+has_duplicates = len(input_files) != len(set(input_files))
+
+if has_duplicates:
+    sys.exit("There are duplicates in the input vcfs, please specify again")
+if args.priority and len(input_files) != len(args.priority):
+    sys.exit("The number of vcfs (%s) does not match with the number of callers in priority (%s)" % (len(input_files), len(args.priority)))
+
+if args.type not in recognised_modes:
+    sys.exit("The mode '{%s}' was not recognised, must be one of: %s" % (args.type, ", ".join(recognised_modes)))
+
+if args.type == "somatic" and not (args.normal and args.tumor):
+    sys.exit("normal and tumor ids are required for somatic vcfs")
 
 ###############################################################################
 
@@ -91,7 +101,7 @@ tumor_id = args.tumor
 
 ###############################################################################
 
-if vcf_type == 'germline':
+if vcf_type == "germline":
 
     # A list of cleaned vcf with extracted columns
     vcf_list = [NormalisedVcf(vcf).process_vcf(columns_to_keep) for vcf
@@ -110,7 +120,7 @@ if vcf_type == 'germline':
         for var in vcf.variants.keys():
             variant_to_vcf_dict[var].append(i)
 
-    # Take the unquie variants, don't sort them
+    # Take the unquie variants, don"t sort them
     combined_variants = list(set(combined_variants))
 
     # Take the unquie header lines with preserved order
@@ -121,7 +131,7 @@ if vcf_type == 'germline':
         combined_header += vcf.meta_info
 
     # Write the combined vcf
-    with open(vcf_out, 'w') as combined_f:
+    with open(vcf_out, "w") as combined_f:
 
         # Write the meta info and header lines
         for line in list(OrderedDict.fromkeys(combined_header)):
@@ -171,7 +181,7 @@ else:
         combined_header += vcf.meta_info
 
     # Write the combined vcf
-    with open(vcf_out, 'w') as combined_f:
+    with open(vcf_out, "w") as combined_f:
 
         # Write the meta info and header lines
         for line in list(OrderedDict.fromkeys(combined_header)):
@@ -179,7 +189,7 @@ else:
         for line in SOMATIC_STATS_HEADER:
             combined_f.write(line)
         # write the chr\tpos\t... line
-        combined_f.write('\t'.join([HEADER, normal_id, tumor_id+'\n']))
+        combined_f.write("\t".join([HEADER, normal_id, tumor_id+"\n"]))
 
         # Write the variants
         for v_key in combined_variants:
@@ -199,6 +209,8 @@ else:
 summary = Counter([tuple(v) for v in variant_to_vcf_dict.values()])
 summary_count = []
 # Output the combinations of the callers
+summary_header = []
+
 for i, caller in enumerate(callers):
     if i == 0:
         summary_header = [caller for caller in callers]
@@ -214,7 +226,6 @@ with open("Combine_variants_summary.tsv", "w") as f:
 
 # Write variant location file for samtools pileup
 if regions:
-    with open(regions, 'w') as loc_f:
+    with open(regions, "w") as loc_f:
         for v_key in combined_variants:
-            loc_f.write('\t'.join(v_key.split()[:2]) + '\n')
-
+            loc_f.write("\t".join(v_key.split()[:2]) + "\n")
