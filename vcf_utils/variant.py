@@ -308,12 +308,23 @@ class Variant:
                 # Recursively remove the indels to avoid counting the indels
                 while '-' in pileup:
                     index = pileup.index('-')
-                    length = int(pileup[index+1])
-                    pileup = pileup[:index] + pileup[index+length+2:]
+                    # check length of indel, which may be multiple characters (>=10)
+                    i=1
+                    length=""
+                    while pileup[index+i] in [str(x) for x in range(0,10)]:
+                        length += pileup[index+i]
+                        i+=1
+                    length = int(length)
+                    pileup = pileup[:index] + pileup[index+length+i:]
                 while '+' in pileup:
                     index = pileup.index('+')
-                    length = int(pileup[index+1])
-                    pileup = pileup[:index] + pileup[index+length+2:]
+                    i=1
+                    length=""
+                    while pileup[index+i] in [str(x) for x in range(0,10)]:
+                        length += pileup[index+i]
+                        i+=1
+                    length = int(length)
+                    pileup = pileup[:index] + pileup[index+length+i:]
                 alt_fwd = pileup.count(self.alt)
                 alt_rev = pileup.count(self.alt.lower())
 
