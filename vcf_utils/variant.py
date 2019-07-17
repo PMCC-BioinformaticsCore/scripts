@@ -125,7 +125,7 @@ class Variant:
             self.info['AF'] = str(round(float(self.format['AD'].split(',')
                                   [1]) / float(self.format['DP']), 2))
         except:
-            self.info['AF'] = '0'
+            self.info['AF'] = '.'
 
         # Replace the AD / DP values in INFO with FORMAT
         if 'AD' in self.format.keys():
@@ -284,7 +284,7 @@ class Variant:
                 self.format['DP'] = col_mean
             if 'AD' in cols and 'AF' in cols:
                 for caller in callers:
-                    if self.info['AD_{}'.format(caller)] == '' and self.info['AF_{}'.format(caller)] == '0':
+                    if self.info['AD_{}'.format(caller)] == '' and self.info['AF_{}'.format(caller)] == '.':
                         self.info['AD_{}'.format(caller)] = '.'
                         self.info['AF_{}'.format(caller)] = '.'
 

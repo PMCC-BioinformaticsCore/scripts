@@ -54,7 +54,6 @@ def extract_cols(i_dict, f_dict, cols):
     Output:
         new info and format dictionaries
     """
-
     i_cols, f_cols = OrderedDict(), OrderedDict()
     for col in cols:
         i_header, f_header = i_dict.get(col), f_dict.get(col)
