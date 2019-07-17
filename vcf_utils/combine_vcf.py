@@ -16,6 +16,8 @@ Notes on how the columns are being parsed:
 -- AD/DP: INFO value overwritten by FORMAT value (if FORMAT value exists), in the process_(somatic_)variant
 -- GT: The only enfored column in FORMAT
 -- Other columns: extract_cols moves FORMAT column names to INFO; select_info finds column values from variants
+
+A bug: Currently this script doesn't support output file in a directory that doesn't exist
 """
 
 ###############################################################################
@@ -44,8 +46,8 @@ required = parser.add_argument_group("required arguments")
 required.add_argument("-i",  help="input vcfs, the priority of the vcfs will be \
                       based on the order of the input. This parameter can be \
                       specified more than once", action="append", required=True)
-required.add_argument("--columns", help="Columns to keep. This parameter can \
-                      be specified more than once", action="append", required=True)
+required.add_argument("--columns", help="A list of columns, seperated by ',' (We need to have a talk about this \
+                      parameter lol)", required=True)
 required.add_argument("-o", help="output vcf (unsorted)", required=True)
 required.add_argument("--type", help="must be either germline or somatic", required=True,
                       choices=recognised_modes)
@@ -57,7 +59,7 @@ required.add_argument("--normal", help="Sample id of germline vcf, or normal \
 required.add_argument("--tumor", help="tumor sample ID, required if inputs are \
                       somatic vcfs", required=False)
 required.add_argument("--priority", help="The priority of the callers, must match \
-                      with the callers in the source header", nargs="+", required=False)
+                      with the callers in the source header, seperated by ','", required=False)
 args = parser.parse_args()
 
 # Sanity check number of inputs
@@ -80,8 +82,10 @@ has_duplicates = len(input_files) != len(set(input_files))
 
 if has_duplicates:
     sys.exit("There are duplicates in the input vcfs, please specify again")
-if args.priority and len(input_files) != len(args.priority):
-    sys.exit("The number of vcfs (%s) does not match with the number of callers in priority (%s)" % (len(input_files), len(args.priority)))
+if args.priority:
+    args.priority = args.priority.split(',')
+    if len(input_files) != len(args.priority):
+        sys.exit("The number of vcfs (%s) does not match with the number of callers in priority (%s)" % (len(input_files), len(args.priority)))
 
 if args.type not in recognised_modes:
     sys.exit("The mode '{%s}' was not recognised, must be one of: %s" % (args.type, ", ".join(recognised_modes)))
@@ -92,7 +96,7 @@ if args.type == "somatic" and not (args.normal and args.tumor):
 ###############################################################################
 
 vcf_in = args.i
-columns_to_keep = args.columns
+columns_to_keep = args.columns.split(",")
 vcf_out = args.o
 regions = args.regions
 vcf_type = args.type
@@ -110,6 +114,10 @@ if vcf_type == "germline":
     # Combine the variants into a list
     combined_variants, variant_to_vcf_dict = [], dd(list)
     callers = [vcf.caller for vcf in vcf_list]
+
+    if args.priority:
+        if set(callers) != set(args.priority):
+            sys.exit("The callers specified in the argument priority [{0}]are different from the vcfs [{1}]".format(', '.join(map(str, args.priority)), ', '.join(map(str, callers))))
 
     # Sort the vcf
     vcf_list, callers = sort_vcf(args.priority, callers, vcf_list)
@@ -164,6 +172,10 @@ else:
     # Combine the variants into a list
     combined_variants, variant_to_vcf_dict = [], dd(list)
     callers = [vcf.caller for vcf in vcf_list]
+
+    if args.priority:
+        if set(callers) != set(args.priority):
+            sys.exit("The callers specified in the argument priority [{0}]are different from the vcfs [{1}]".format(', '.join(map(str, priority)), ', '.join(map(str, callers))))
 
     # Sort the vcf
     vcf_list, callers = sort_vcf(args.priority, callers, vcf_list)

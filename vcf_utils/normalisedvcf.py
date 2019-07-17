@@ -89,7 +89,9 @@ class NormalisedVcf:
                      identify line '##source=(caller name)' to vcf header"
                      .format(self.name))
 
-        if self.caller == 'strelka':
+        # When user specify the AF and vcf does not have, try to calculate that 
+        # for the user
+        if ('AF' in cols) and ('AF' not in info_dict.keys()):
             vcf_header = VcfHeader(AF_LINE)
             info_dict.update({vcf_header.meta_id: vcf_header})
 
@@ -106,11 +108,14 @@ class NormalisedVcf:
         # Continue to read the file, this time the variants
         for line in vcf:
             variant = Variant().process_variant(line, caller=self.caller)
-            cleaned_variant = Variant.select_info(variant,
-                                                  info_cols, format_cols)
-            # The dictionary is query by chr\tpos\tref\talt
-            self.variants.update(
-                {cleaned_variant.variant_key: cleaned_variant})
+            if variant.alt != '*':
+                #print("before", variant.info)
+                cleaned_variant = Variant.select_info(variant,
+                                                    info_cols, format_cols)
+                #print("after", variant.info)
+                # The dictionary is query by chr\tpos\tref\talt
+                self.variants.update(
+                    {cleaned_variant.variant_key: cleaned_variant})
 
         return self
 
@@ -191,13 +196,15 @@ class NormalisedVcf:
             for line in vcf:
                 variant = Variant().process_somatic_variant(
                         line, self.caller, normal_index, tumor_index)
-                cleaned_variant = Variant.select_info(variant,
-                                                      info_cols, format_cols,
-                                                      caller=self.caller,
-                                                      somatic=True)
-                # The dictionary is query by chr\tpos\tref\talt
-                self.variants.update({cleaned_variant.variant_key:
-                                      cleaned_variant})
+                if variant.alt != '*':
+                    cleaned_variant = Variant.select_info(variant,
+                                                        info_cols, format_cols,
+                                                        caller=self.caller,
+                                                        somatic=True)
+                    # The dictionary is query by chr\tpos\tref\talt
+                    self.variants.update({cleaned_variant.variant_key:
+                                        cleaned_variant})
 
         return self
+
 
