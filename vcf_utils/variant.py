@@ -40,12 +40,13 @@ def normalise_GT(old_gt):
     return gt
 
 
-def cal_AD_DP(info_dict, col_name):
-    """Calcualte the mean / sd of AD or DP
+def cal_AD(AD):
+    """Calculate the average and sd of AD
     """
-    if col_name.startswith('AD'):
-        AD = [[int(i) for i in v.split(',')] for k, v in info_dict.items()
-              if k.startswith('{}'.format(col_name))]
+    if AD == ['']:
+        col_mean, col_sd = '.', '.'
+    else:
+        AD = [[int(i) for i in v.split(',')] for v in AD]
         if len(AD) == 1:
             col_mean, col_sd = ','.join(str(i) for i in AD[0]), '.'
         else:
@@ -53,17 +54,21 @@ def cal_AD_DP(info_dict, col_name):
                                 2), zip(*AD))])
             col_sd = ','.join([str(i) for i in map(lambda x: round(stdev(x),
                               2), zip(*AD))])
+    return col_mean, col_sd
 
+def cal_DP(DP):
+    """Calculate the average and sd of DP
+    """
+    if DP == ['']:
+        col_mean, col_sd = '.', '.'
     else:
-        DP = [int(v) for k, v in info_dict.items() if k.startswith('{}'
-              .format(col_name))]
+        DP = [int(v) for v in DP]
         if len(DP) == 1:
             col_mean, col_sd = str(DP[0]), '.'
         else:
             col_mean, col_sd = str(round(mean(DP), 2)), str(round(stdev(DP), 2))
 
     return col_mean, col_sd
-
 
 ###############################################################################
 
@@ -123,9 +128,9 @@ class Variant:
             self.info['AF'] = '0'
 
         # Replace the AD / DP values in INFO with FORMAT
-        if self.format['AD']:
+        if 'AD' in self.format.keys():
             self.info['AD'] = self.format['AD']
-        if self.format['DP']:
+        if 'DP' in self.format.keys():
             self.info['DP'] = self.format['DP']
         return self
 
@@ -264,32 +269,42 @@ class Variant:
         new_info_vals = ['-'.join(callers)]
 
         # Calculate AD and DP
-        for col in ['AD', 'DP']:
-            if col in cols:
+        if not somatic:
+            if 'AD' in cols:
+                AD = [v for k, v in i_dict.items() if k.startswith('AD')]
+                col_mean, col_sd = cal_AD(AD)
+                new_info_names.extend(['AD_mean', 'AD_sd'])
+                new_info_vals.extend([col_mean, col_sd])
+                self.format['AD'] = col_mean
+            if 'DP' in cols:
+                DP = [v for k, v in i_dict.items() if k.startswith('DP')]
+                col_mean, col_sd = cal_DP(DP)
+                new_info_names.extend(['DP_mean', 'DP_sd'])
+                new_info_vals.extend([col_mean, col_sd])
+                self.format['DP'] = col_mean
+            if 'AD' in cols and 'AF' in cols:
+                for caller in callers:
+                    if self.info['AD_{}'.format(caller)] == '' and self.info['AF_{}'.format(caller)] == '0':
+                        self.info['AD_{}'.format(caller)] = '.'
+                        self.info['AF_{}'.format(caller)] = '.'
 
-                if not somatic:
-                    col_mean, col_sd = cal_AD_DP(i_dict, col)
-                    new_info_names.extend(['{}_mean'.format(col),
-                                          '{}_sd'.format(col)])
+        else:
+            for i in ['normal', 'tumor']:
+                if 'AD' in cols:
+                    AD = [v for k, v in i_dict.items() if k.startswith('AD_' + i)]
+                    col_mean, col_sd = cal_AD(AD)
+                    new_info_names.extend(['AD_mean', 'AD_sd'])
                     new_info_vals.extend([col_mean, col_sd])
-                    self.format[col] = col_mean
-
-                else:
-                    for _col in ['{}_normal'.format(col),
-                                 '{}_tumor'.format(col)]:
-                        col_mean, col_sd = cal_AD_DP(i_dict, _col)
-                        new_info_names.extend(['{}_mean'.format(_col),
-                                               '{}_sd'.format(_col)])
-                        new_info_vals.extend([col_mean, col_sd])
-                        # Add AD / DP column in FORMAT in the cols
-                        if 'normal' in _col:
-                            self.format['normal'][col] = col_mean
-                        else:
-                            self.format['tumor'][col] = col_mean
+                    self.format[i]['AD'] = col_mean
+                if 'DP' in cols:
+                    DP = [v for k, v in i_dict.items() if k.startswith('DP_' + i)]
+                    col_mean, col_sd = cal_DP(DP)
+                    new_info_names.extend(['DP_mean', 'DP_sd'])
+                    new_info_vals.extend([col_mean, col_sd])
+                    self.format[i]['DP'] = col_mean                
 
         for name, val in zip(new_info_names, new_info_vals):
             self.info[name] = val
-
         return self
 
     def cal_bam_stats(self, pileup_line):
@@ -415,4 +430,6 @@ class Variant:
             return ('\t'.join(self.mandatory + [';'.join(info_), ':'.join(
                     format_names), ':'.join(normal_format_vals), ':'.join(
                     tumor_format_vals)]) + '\n')
+
+
 

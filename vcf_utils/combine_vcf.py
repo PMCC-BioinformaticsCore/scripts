@@ -44,8 +44,8 @@ required = parser.add_argument_group("required arguments")
 required.add_argument("-i",  help="input vcfs, the priority of the vcfs will be \
                       based on the order of the input. This parameter can be \
                       specified more than once", action="append", required=True)
-required.add_argument("--columns", help="Columns to keep. This parameter can \
-                      be specified more than once", action="append", required=True)
+required.add_argument("--columns", help="We need to have a talk about this \
+                      parameter lol", nargs="+", required=True)
 required.add_argument("-o", help="output vcf (unsorted)", required=True)
 required.add_argument("--type", help="must be either germline or somatic", required=True,
                       choices=recognised_modes)
@@ -111,6 +111,10 @@ if vcf_type == "germline":
     combined_variants, variant_to_vcf_dict = [], dd(list)
     callers = [vcf.caller for vcf in vcf_list]
 
+    if args.priority:
+        if set(callers) != set(args.priority):
+            sys.exit("The callers specified in the argument priority [{0}]are different from the vcfs [{1}]".format(', '.join(map(str, priority)), ', '.join(map(str, callers))))
+
     # Sort the vcf
     vcf_list, callers = sort_vcf(args.priority, callers, vcf_list)
 
@@ -164,6 +168,10 @@ else:
     # Combine the variants into a list
     combined_variants, variant_to_vcf_dict = [], dd(list)
     callers = [vcf.caller for vcf in vcf_list]
+
+    if args.priority:
+        if set(callers) != set(args.priority):
+            sys.exit("The callers specified in the argument priority [{0}]are different from the vcfs [{1}]".format(', '.join(map(str, priority)), ', '.join(map(str, callers))))
 
     # Sort the vcf
     vcf_list, callers = sort_vcf(args.priority, callers, vcf_list)
