@@ -4,10 +4,10 @@
 FROM ubuntu:16.04
 MAINTAINER Michael Franklin <michael.franklin@petermac.org>
 
-ENV MANTA_VERSION 1.6.0
+ENV MANTA_VERSION 1.5.1
 
 LABEL \
-  version="1.6.0" \
+  version="1.5.1" \
   description="Manta image for use in Workflows"
 
 RUN apt-get update -qq \
