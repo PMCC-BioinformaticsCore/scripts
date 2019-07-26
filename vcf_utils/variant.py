@@ -43,7 +43,9 @@ def normalise_GT(old_gt):
 def cal_AD(AD):
     """Calculate the average and sd of AD
     """
-    if AD == ['']:
+    # Remove the AD if missing in specific caller
+    AD = [k for k in AD if k != '.']
+    if AD == []:
         col_mean, col_sd = '.', '.'
     else:
         AD = [[int(i) for i in v.split(',')] for v in AD]
@@ -51,7 +53,7 @@ def cal_AD(AD):
             col_mean, col_sd = ','.join(str(i) for i in AD[0]), '.'
         else:
             col_mean = ','.join([str(i) for i in map(lambda x: round(mean(x),
-                                2), zip(*AD))])
+                                 ), zip(*AD))])
             col_sd = ','.join([str(i) for i in map(lambda x: round(stdev(x),
                               2), zip(*AD))])
     return col_mean, col_sd
@@ -59,14 +61,16 @@ def cal_AD(AD):
 def cal_DP(DP):
     """Calculate the average and sd of DP
     """
-    if DP == ['']:
+    # Remove the DP if missing
+    DP = [k for k in DP if k != '.']
+    if DP == []:
         col_mean, col_sd = '.', '.'
     else:
         DP = [int(v) for v in DP]
         if len(DP) == 1:
             col_mean, col_sd = str(DP[0]), '.'
         else:
-            col_mean, col_sd = str(round(mean(DP), 2)), str(round(stdev(DP), 2))
+            col_mean, col_sd = str(round(mean(DP))), str(round(stdev(DP), 2))
 
     return col_mean, col_sd
 
@@ -118,7 +122,7 @@ class Variant:
         if caller == 'strelka':
             # use DPI as DP for INDELs in strelka
             if not len(self.ref) == len(self.alt) == 1:
-                self.format['DP'] = self.format['DPI']
+                self.format['DP'] = self.format.get("DPI", ".")
 
         # Calculate the allele frequency regardless
         try:
@@ -217,13 +221,13 @@ class Variant:
 
         if not somatic:
             for k, v in i_dict.items():
-                info = self.info.get(k, '')
+                info = self.info.get(k, '.')
                 if info:
                     new_info[v.meta_id] = info
                 else:
-                    new_info[v.meta_id] = self.format.get(k, '')
+                    new_info[v.meta_id] = self.format.get(k, '.')
             for k, v in f_dict.items():
-                new_format[v.meta_id] = self.format.get(k, '')
+                new_format[v.meta_id] = self.format.get(k, '.')
 
         else:
             new_format['normal'], new_format['tumor'] = OrderedDict(),\
