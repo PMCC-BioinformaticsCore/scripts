@@ -174,8 +174,8 @@ class NormalisedVcf:
              (self.header.split()[9] == tid):
             normal_index, tumor_index = 10, 9
         else:
-            sys.exit("Normal or tumor sample id didn't match with file {}"
-                     .format(self.name))
+            sys.exit("Normal sample id [{}] or tumor sample id [{}] didn't match with file {}: [{}], [{}]"
+                     .format(nid, tid, self.name, self.header.split()[9], self.header.split()[10]))
 
         # Continue to read the file, this time the variants
         # The vardict vcf needs extra filtering of strong somatic variants

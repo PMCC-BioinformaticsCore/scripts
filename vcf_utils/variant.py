@@ -297,13 +297,13 @@ class Variant:
                 if 'AD' in cols:
                     AD = [v for k, v in i_dict.items() if k.startswith('AD_' + i)]
                     col_mean, col_sd = cal_AD(AD)
-                    new_info_names.extend(['AD_mean', 'AD_sd'])
+                    new_info_names.extend(['AD_mean_'+i, 'AD_sd_'+i])
                     new_info_vals.extend([col_mean, col_sd])
                     self.format[i]['AD'] = col_mean
                 if 'DP' in cols:
                     DP = [v for k, v in i_dict.items() if k.startswith('DP_' + i)]
                     col_mean, col_sd = cal_DP(DP)
-                    new_info_names.extend(['DP_mean', 'DP_sd'])
+                    new_info_names.extend(['DP_mean_'+i, 'DP_sd_'+i])
                     new_info_vals.extend([col_mean, col_sd])
                     self.format[i]['DP'] = col_mean                
 
