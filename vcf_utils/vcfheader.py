@@ -6,27 +6,27 @@ from collections import OrderedDict
 GT_LINE = '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">'
 STATS_HEADER = ['##INFO=<ID=Identified,Number=1,Type=String,Description="Source \
 VCF for the merged record">\n',
-                '##INFO=<ID=AD_mean,Number=1,Type=Float,Description="Mean of \
+                '##INFO=<ID=AD_mean,Number=R,Type=Float,Description="Mean of \
 allelic depths in source vcfs">\n',
-                '##INFO=<ID=AD_sd,Number=1,Type=Float,Description="Standard \
+                '##INFO=<ID=AD_sd,Number=R,Type=Float,Description="Standard \
 deviation of allelic depths in source vcfs">\n',
                 '##INFO=<ID=DP_mean,Number=1,Type=Float,Description="Mean of \
 read depths in source vcfs">\n',
                 '##INFO=<ID=DP_sd,Number=1,Type=Float,Description="Standard \
 deviation of read depths in source vcfs">\n',
-                '##FORMAT=<ID=AD,Number=1,Type=Float,Description="Mean of \
+                '##FORMAT=<ID=AD,Number=R,Type=Float,Description="Mean of \
 allelic depths in source vcfs">\n',
                 '##FORMAT=<ID=DP,Number=1,Type=Float,Description="Mean of read \
 depths in source vcfs">\n']
 SOMATIC_STATS_HEADER = ['##INFO=<ID=Identified,Number=1,Type=String, \
 Description="Source VCF for the merged record">\n',
-                        '##INFO=<ID=AD_mean_normal,Number=1,Type=Float, \
+                        '##INFO=<ID=AD_mean_normal,Number=R,Type=Float, \
 Description="Mean of allelic depths in source vcfs">\n',
-                        '##INFO=<ID=AD_sd_normal,Number=1,Type=Float, \
+                        '##INFO=<ID=AD_sd_normal,Number=R,Type=Float, \
 Description="Standard deviation of allelic depths in source vcfs">\n',
-                        '##INFO=<ID=AD_mean_tumor,Number=1,Type=Float, \
+                        '##INFO=<ID=AD_mean_tumor,Number=R,Type=Float, \
 Description="Mean of allelic depths in source vcfs">\n',
-                        '##INFO=<ID=AD_sd_tumor,Number=1,Type=Float, \
+                        '##INFO=<ID=AD_sd_tumor,Number=R,Type=Float, \
 Description="Standard deviation of allelic depths in source vcfs">\n',
                         '##INFO=<ID=DP_mean_normal,Number=1,Type=Float, \
 Description="Mean of read depths in source vcfs">\n',
@@ -36,7 +36,7 @@ Description="Standard deviation of read depths in source vcfs">\n',
 Description="Mean of read depths in source vcfs">\n',
                         '##INFO=<ID=DP_sd_tumor,Number=1,Type=Float, \
 Description="Standard deviation of read depths in source vcfs">\n',
-                        '##FORMAT=<ID=AD,Number=1,Type=Float, \
+                        '##FORMAT=<ID=AD,Number=R,Type=Float, \
 Description="Mean of allelic depths in source vcfs">\n',
                         '##FORMAT=<ID=DP,Number=1,Type=Float, \
 Description="Mean of read depths in source vcfs">\n']

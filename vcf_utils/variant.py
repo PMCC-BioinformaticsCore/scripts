@@ -23,7 +23,7 @@ Bioinformatics Dept">\n',
                    '##FORMAT=<ID=PMCADR,Number=A,Type=String,Description="Depth \
 of alternate-supporting bases on reverse strand - Calculated By \
 Bioinformatics Dept">\n',
-                   '##FORMAT=<ID=PMCBDIR,Number=A,Type=String,Description="T/F \
+                   '##FORMAT=<ID=PMCBDIR,Number=A,Type=String,Description="Y/N \
 indicating if variant is bidirectional (N/A if no alt reads) - Calculated By \
 Bioinformatics Dept">\n']
 
@@ -280,17 +280,22 @@ class Variant:
                 new_info_names.extend(['AD_mean', 'AD_sd'])
                 new_info_vals.extend([col_mean, col_sd])
                 self.format['AD'] = col_mean
+
             if 'DP' in cols:
                 DP = [v for k, v in i_dict.items() if k.startswith('DP')]
+                #print(DP)
                 col_mean, col_sd = cal_DP(DP)
                 new_info_names.extend(['DP_mean', 'DP_sd'])
                 new_info_vals.extend([col_mean, col_sd])
                 self.format['DP'] = col_mean
-            if 'AD' in cols and 'AF' in cols:
-                for caller in callers:
-                    if self.info['AD_{}'.format(caller)] == '' and self.info['AF_{}'.format(caller)] == '.':
-                        self.info['AD_{}'.format(caller)] = '.'
-                        self.info['AF_{}'.format(caller)] = '.'
+
+#            if 'AD' in cols and 'AF' in cols:
+#                for caller in callers:
+#                    if self.info['AD_{}'.format(caller)] == '' and self.info['AF_{}'.format(caller)] == '.':
+#                        self.info.pop('AD_{}'.format(caller))
+#                        self.info.pop('AF_{}'.format(caller))
+                        #self.info['AD_{}'.format(caller)] = '.'
+                        #self.info['AF_{}'.format(caller)] = '.'
 
         else:
             for i in ['normal', 'tumor']:
@@ -307,8 +312,17 @@ class Variant:
                     new_info_vals.extend([col_mean, col_sd])
                     self.format[i]['DP'] = col_mean                
 
+        # Remove the '.' from AD/DP/AF
+        new_info = OrderedDict()
+        for k, v in self.info.items():
+            if v == "." and ('AD' in k or 'AF' in k or 'DP' in k):
+                pass
+            else:
+                new_info[k] = v
+
         for name, val in zip(new_info_names, new_info_vals):
-            self.info[name] = val
+            new_info[name] = val
+        self.info = new_info
         return self
 
     def cal_bam_stats(self, pileup_line):
@@ -378,9 +392,9 @@ class Variant:
             if alt_reads != 0:
                 alt_freq = round(alt_reads / total_depth, 2)
                 if alt_fwd != 0 and alt_rev != 0:
-                    bidir = 'T'
+                    bidir = 'Y'
                 else:
-                    bidir = 'F'
+                    bidir = 'N'
             else:
                 alt_freq, bidir = '.', 'N/A'
 

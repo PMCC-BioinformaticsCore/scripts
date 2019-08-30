@@ -210,7 +210,10 @@ else:
             info_dict = OrderedDict()
             for i in callers_indexes:
                 info_dict.update(vcf_list[i].variants[v_key].info)
-            i = callers_indexes[0]
+            if callers_names[0] == 'strelka':
+                i = callers_indexes[-1]
+            else:
+            	i = callers_indexes[0]
             combined_variant = Variant.combine_info(
                                vcf_list[i].variants[v_key], columns_to_keep,
                                callers_names, info_dict, somatic=True)
