@@ -33,7 +33,7 @@ Bioinformatics Dept">\n']
 
 def normalise_GT(old_gt):
     gt = old_gt.replace('.', '0'.replace('|', '/'))
-    if gt in ['1/0', '0/1/0', '0/0/1']:
+    if ('1/0' in gt) or ('1/0' in gt):
         gt = '0/1'
     else:
         pass
@@ -46,11 +46,11 @@ def cal_AD(AD):
     # Remove the AD if missing in specific caller
     AD = [k for k in AD if k != '.']
     if AD == []:
-        col_mean, col_sd = '.', '.'
+        col_mean, col_sd = '.,.', '.,.'
     else:
         AD = [[int(i) for i in v.split(',')] for v in AD]
         if len(AD) == 1:
-            col_mean, col_sd = ','.join(str(i) for i in AD[0]), '.'
+            col_mean, col_sd = ','.join(str(i) for i in AD[0]), '.,.'
         else:
             col_mean = ','.join([str(i) for i in map(lambda x: round(mean(x),
                                  ), zip(*AD))])
@@ -238,12 +238,15 @@ class Variant:
                     new_info[k] = self.info[k]
                 except KeyError:
                     # This column has normal / tumor
-                    if k.endswith('normal'):
-                        new_info['{}_{}'.format(k, caller)] = \
-                        self.format['normal'][k.strip('_normal')]
-                    else:
-                        new_info['{}_{}'.format(k, caller)] = \
-                        self.format['tumor'][k.strip('_tumor')]
+                    try:
+                        if k.endswith('normal'):
+                            new_info['{}_{}'.format(k, caller)] = \
+                            self.format['normal'][k.strip('_normal')]
+                        else:
+                            new_info['{}_{}'.format(k, caller)] = \
+                            self.format['tumor'][k.strip('_tumor')]
+                    except KeyError:
+                        pass
 
             for k, v in f_dict.items():
                 try:
@@ -288,14 +291,6 @@ class Variant:
                 new_info_names.extend(['DP_mean', 'DP_sd'])
                 new_info_vals.extend([col_mean, col_sd])
                 self.format['DP'] = col_mean
-
-#            if 'AD' in cols and 'AF' in cols:
-#                for caller in callers:
-#                    if self.info['AD_{}'.format(caller)] == '' and self.info['AF_{}'.format(caller)] == '.':
-#                        self.info.pop('AD_{}'.format(caller))
-#                        self.info.pop('AF_{}'.format(caller))
-                        #self.info['AD_{}'.format(caller)] = '.'
-                        #self.info['AF_{}'.format(caller)] = '.'
 
         else:
             for i in ['normal', 'tumor']:
@@ -448,6 +443,4 @@ class Variant:
             return ('\t'.join(self.mandatory + [';'.join(info_), ':'.join(
                     format_names), ':'.join(normal_format_vals), ':'.join(
                     tumor_format_vals)]) + '\n')
-
-
 
