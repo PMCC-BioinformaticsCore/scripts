@@ -318,6 +318,8 @@ class Variant:
         for name, val in zip(new_info_names, new_info_vals):
             new_info[name] = val
         self.info = new_info
+        # Set filter value of combined variant to .
+        self.filter = '.'
         return self
 
     def cal_bam_stats(self, pileup_line):
@@ -427,8 +429,10 @@ class Variant:
             for name, val in self.format.items():
                 format_names.append(name)
                 format_vals.append(val)
-            return ('\t'.join(self.mandatory + [';'.join(info_), ':'
-                    .join(format_names), ':'.join(format_vals)]) + '\n')
+            return ('\t'.join([self.chr, self.pos, self.sample_id, 
+                               self.ref, self.alt, self.qual, self.filter] + 
+                              [';'.join(info_), ':'.join(format_names), 
+                               ':'.join(format_vals)]) + '\n')
 
         else:
             info_, format_names, normal_format_vals, tumor_format_vals =\
@@ -440,7 +444,9 @@ class Variant:
                 normal_format_vals.append(val)
             for name, val in self.format['tumor'].items():
                 tumor_format_vals.append(val)
-            return ('\t'.join(self.mandatory + [';'.join(info_), ':'.join(
-                    format_names), ':'.join(normal_format_vals), ':'.join(
-                    tumor_format_vals)]) + '\n')
+            return ('\t'.join([self.chr, self.pos, self.sample_id,
+                               self.ref, self.alt, self.qual, self.filter] + 
+                              [';'.join(info_), ':'.join(format_names), 
+                               ':'.join(normal_format_vals), 
+                               ':'.join(tumor_format_vals)]) + '\n')
 
