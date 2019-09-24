@@ -210,31 +210,40 @@ else:
             info_dict = OrderedDict()
             for i in callers_indexes:
                 info_dict.update(vcf_list[i].variants[v_key].info)
-            i = callers_indexes[0]
+            if callers_names[0] == 'strelka':
+                i = callers_indexes[-1]
+            else:
+            	i = callers_indexes[0]
             combined_variant = Variant.combine_info(
                                vcf_list[i].variants[v_key], columns_to_keep,
                                callers_names, info_dict, somatic=True)
             combined_f.write(Variant.write(combined_variant, somatic=True))
 
-# Output combine varaints summary
-# Count the number of variants 
-summary = Counter([tuple(v) for v in variant_to_vcf_dict.values()])
-summary_count = []
-# Output the combinations of the callers
-summary_header = []
+# Output combine varaints summary count
+# Raw contains all the variants in each of the vcf
+vcf_combintaion_raw = [set(vcf.variants.keys()) for vcf in vcf_list]
+vcf_combintaion=[]
+for i in range(2, len(callers)+1):
+        for j in list(combinations(range(len(callers)),i)):
+            vcf_combintaion.append(j)
 
-for i, caller in enumerate(callers):
-    if i == 0:
-        summary_header = [caller for caller in callers]
-    else:
-        for j in list(combinations(callers, i+1)):
-            summary_header.append('-'.join(j))
-for i in range(len(callers)+1):
-    for j in list(combinations(range(len(callers)), i+1)):
-        summary_count.append(str(summary[j]))
 with open("Combine_variants_summary.tsv", "w") as f:
-    f.write('\t'.join(summary_header) + '\n')
-    f.write('\t'.join(summary_count) + '\n')
+    f.write("Caller\tCount\n")
+    # Do calculation of the combination
+    for i, vcf in enumerate(callers):
+        f.write(vcf + "\t" + str(len(vcf_combintaion_raw[i])) + "\n") 
+    # Calculate union
+    for j in vcf_combintaion:
+        union_variants=set()
+        for caller_index in j:
+            union_variants.update(vcf_combintaion_raw[caller_index])
+        f.write("+".join([callers[c] for c in j]) + "\t" + str(len(union_variants)) + "\n")
+    # Calculate intersection
+    for j in vcf_combintaion:
+        newset = [vcf_combintaion_raw[s] for s in j]
+        intersect_variants=set.intersection(*newset)
+        f.write("-".join([callers[c] for c in j]) + "\t" + str(len(intersect_variants)) + "\n")
+
 
 # Write variant location file for samtools pileup
 if regions:

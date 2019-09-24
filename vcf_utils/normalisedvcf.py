@@ -62,7 +62,7 @@ class NormalisedVcf:
         info_dict, format_dict = {}, {}
 
         # Read the meta-information lines from the vcf
-        for line in vcf:
+        for i, line in enumerate(vcf):
             # Handle exceptions: the AF will be calcualted regardless;
             if line.startswith('##FORMAT=<ID=AF'):
                 pass
@@ -106,16 +106,13 @@ class NormalisedVcf:
         self.header = line
 
         # Continue to read the file, this time the variants
-        for line in vcf:
+        for j, line in enumerate(vcf):
             variant = Variant().process_variant(line, caller=self.caller)
-            if variant.alt != '*':
-                #print("before", variant.info)
-                cleaned_variant = Variant.select_info(variant,
-                                                    info_cols, format_cols)
-                #print("after", variant.info)
-                # The dictionary is query by chr\tpos\tref\talt
-                self.variants.update(
-                    {cleaned_variant.variant_key: cleaned_variant})
+            if variant.alt == '*':
+                print("Warning: Vcf {} line {} has variant with alt=*".format(self.caller, str(i+j+1)))
+            cleaned_variant = Variant.select_info(variant, info_cols, format_cols)
+            # The dictionary is query by chr\tpos\tref\talt
+            self.variants.update({cleaned_variant.variant_key: cleaned_variant})
 
         return self
 
@@ -127,7 +124,7 @@ class NormalisedVcf:
         info_dict, format_dict = od(), od()
 
         # Read the meta-information lines from the vcf
-        for line in vcf:
+        for i, line in enumerate(vcf):
             # Handle exceptions: skip the AF and DP in INFO
             if (line.startswith('##INFO=<ID=DP') or
                line.startswith('##INFO=<ID=AF')):
@@ -174,36 +171,19 @@ class NormalisedVcf:
              (self.header.split()[9] == tid):
             normal_index, tumor_index = 10, 9
         else:
-            sys.exit("Normal or tumor sample id didn't match with file {}"
-                     .format(self.name))
+            sys.exit("Normal sample id [{}] or tumor sample id [{}] didn't match with file {}: [{}], [{}]"
+                     .format(nid, tid, self.name, self.header.split()[9], self.header.split()[10]))
 
         # Continue to read the file, this time the variants
-        # The vardict vcf needs extra filtering of strong somatic variants
-        if self.caller.lower() == 'vardict':
-            for line in vcf:
-                variant = Variant().process_somatic_variant(
-                          line, self.caller, normal_index, tumor_index)
-                if variant.info['STATUS'] == 'StrongSomatic':
-                    cleaned_variant = Variant.select_info(variant, info_cols,
-                                                          format_cols,
-                                                          caller=self.caller,
-                                                          somatic=True)
-                    self.variants.update({cleaned_variant.variant_key:
-                                          cleaned_variant})
-                else:
-                    pass
-        else:
-            for line in vcf:
-                variant = Variant().process_somatic_variant(
-                        line, self.caller, normal_index, tumor_index)
-                if variant.alt != '*':
-                    cleaned_variant = Variant.select_info(variant,
-                                                        info_cols, format_cols,
-                                                        caller=self.caller,
-                                                        somatic=True)
-                    # The dictionary is query by chr\tpos\tref\talt
-                    self.variants.update({cleaned_variant.variant_key:
-                                        cleaned_variant})
+        for j, line in enumerate(vcf):
+            variant = Variant().process_somatic_variant(
+                    line, self.caller, normal_index, tumor_index)
+            if variant.alt == '*':
+                print("Warning: Line {} contains variant with alt=*".format(str(i+j+1)))
+            cleaned_variant = Variant.select_info(variant, info_cols, format_cols,
+                                                  caller=self.caller, somatic=True)
+            # The dictionary is query by chr\tpos\tref\talt
+            self.variants.update({cleaned_variant.variant_key: cleaned_variant})
 
         return self
 

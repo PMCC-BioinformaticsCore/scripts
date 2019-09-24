@@ -23,7 +23,7 @@ Bioinformatics Dept">\n',
                    '##FORMAT=<ID=PMCADR,Number=A,Type=String,Description="Depth \
 of alternate-supporting bases on reverse strand - Calculated By \
 Bioinformatics Dept">\n',
-                   '##FORMAT=<ID=PMCBDIR,Number=A,Type=String,Description="T/F \
+                   '##FORMAT=<ID=PMCBDIR,Number=A,Type=String,Description="Y/N \
 indicating if variant is bidirectional (N/A if no alt reads) - Calculated By \
 Bioinformatics Dept">\n']
 
@@ -33,7 +33,7 @@ Bioinformatics Dept">\n']
 
 def normalise_GT(old_gt):
     gt = old_gt.replace('.', '0'.replace('|', '/'))
-    if gt in ['1/0', '0/1/0', '0/0/1']:
+    if ('1/0' in gt) or ('1/0' in gt):
         gt = '0/1'
     else:
         pass
@@ -43,15 +43,17 @@ def normalise_GT(old_gt):
 def cal_AD(AD):
     """Calculate the average and sd of AD
     """
-    if AD == ['']:
-        col_mean, col_sd = '.', '.'
+    # Remove the AD if missing in specific caller
+    AD = [k for k in AD if k != '.']
+    if AD == []:
+        col_mean, col_sd = '.,.', '.,.'
     else:
         AD = [[int(i) for i in v.split(',')] for v in AD]
         if len(AD) == 1:
-            col_mean, col_sd = ','.join(str(i) for i in AD[0]), '.'
+            col_mean, col_sd = ','.join(str(i) for i in AD[0]), '.,.'
         else:
             col_mean = ','.join([str(i) for i in map(lambda x: round(mean(x),
-                                2), zip(*AD))])
+                                 ), zip(*AD))])
             col_sd = ','.join([str(i) for i in map(lambda x: round(stdev(x),
                               2), zip(*AD))])
     return col_mean, col_sd
@@ -59,14 +61,16 @@ def cal_AD(AD):
 def cal_DP(DP):
     """Calculate the average and sd of DP
     """
-    if DP == ['']:
+    # Remove the DP if missing
+    DP = [k for k in DP if k != '.']
+    if DP == []:
         col_mean, col_sd = '.', '.'
     else:
         DP = [int(v) for v in DP]
         if len(DP) == 1:
             col_mean, col_sd = str(DP[0]), '.'
         else:
-            col_mean, col_sd = str(round(mean(DP), 2)), str(round(stdev(DP), 2))
+            col_mean, col_sd = str(round(mean(DP))), str(round(stdev(DP), 2))
 
     return col_mean, col_sd
 
@@ -118,7 +122,7 @@ class Variant:
         if caller == 'strelka':
             # use DPI as DP for INDELs in strelka
             if not len(self.ref) == len(self.alt) == 1:
-                self.format['DP'] = self.format['DPI']
+                self.format['DP'] = self.format.get("DPI", ".")
 
         # Calculate the allele frequency regardless
         try:
@@ -217,13 +221,13 @@ class Variant:
 
         if not somatic:
             for k, v in i_dict.items():
-                info = self.info.get(k, '')
+                info = self.info.get(k, '.')
                 if info:
                     new_info[v.meta_id] = info
                 else:
-                    new_info[v.meta_id] = self.format.get(k, '')
+                    new_info[v.meta_id] = self.format.get(k, '.')
             for k, v in f_dict.items():
-                new_format[v.meta_id] = self.format.get(k, '')
+                new_format[v.meta_id] = self.format.get(k, '.')
 
         else:
             new_format['normal'], new_format['tumor'] = OrderedDict(),\
@@ -234,12 +238,15 @@ class Variant:
                     new_info[k] = self.info[k]
                 except KeyError:
                     # This column has normal / tumor
-                    if k.endswith('normal'):
-                        new_info['{}_{}'.format(k, caller)] = \
-                        self.format['normal'][k.strip('_normal')]
-                    else:
-                        new_info['{}_{}'.format(k, caller)] = \
-                        self.format['tumor'][k.strip('_tumor')]
+                    try:
+                        if k.endswith('normal'):
+                            new_info['{}_{}'.format(k, caller)] = \
+                            self.format['normal'][k.strip('_normal')]
+                        else:
+                            new_info['{}_{}'.format(k, caller)] = \
+                            self.format['tumor'][k.strip('_tumor')]
+                    except KeyError:
+                        pass
 
             for k, v in f_dict.items():
                 try:
@@ -276,35 +283,43 @@ class Variant:
                 new_info_names.extend(['AD_mean', 'AD_sd'])
                 new_info_vals.extend([col_mean, col_sd])
                 self.format['AD'] = col_mean
+
             if 'DP' in cols:
                 DP = [v for k, v in i_dict.items() if k.startswith('DP')]
+                #print(DP)
                 col_mean, col_sd = cal_DP(DP)
                 new_info_names.extend(['DP_mean', 'DP_sd'])
                 new_info_vals.extend([col_mean, col_sd])
                 self.format['DP'] = col_mean
-            if 'AD' in cols and 'AF' in cols:
-                for caller in callers:
-                    if self.info['AD_{}'.format(caller)] == '' and self.info['AF_{}'.format(caller)] == '.':
-                        self.info['AD_{}'.format(caller)] = '.'
-                        self.info['AF_{}'.format(caller)] = '.'
 
         else:
             for i in ['normal', 'tumor']:
                 if 'AD' in cols:
                     AD = [v for k, v in i_dict.items() if k.startswith('AD_' + i)]
                     col_mean, col_sd = cal_AD(AD)
-                    new_info_names.extend(['AD_mean', 'AD_sd'])
+                    new_info_names.extend(['AD_mean_'+i, 'AD_sd_'+i])
                     new_info_vals.extend([col_mean, col_sd])
                     self.format[i]['AD'] = col_mean
                 if 'DP' in cols:
                     DP = [v for k, v in i_dict.items() if k.startswith('DP_' + i)]
                     col_mean, col_sd = cal_DP(DP)
-                    new_info_names.extend(['DP_mean', 'DP_sd'])
+                    new_info_names.extend(['DP_mean_'+i, 'DP_sd_'+i])
                     new_info_vals.extend([col_mean, col_sd])
                     self.format[i]['DP'] = col_mean                
 
+        # Remove the '.' from AD/DP/AF
+        new_info = OrderedDict()
+        for k, v in self.info.items():
+            if v == "." and ('AD' in k or 'AF' in k or 'DP' in k):
+                pass
+            else:
+                new_info[k] = v
+
         for name, val in zip(new_info_names, new_info_vals):
-            self.info[name] = val
+            new_info[name] = val
+        self.info = new_info
+        # Set filter value of combined variant to .
+        self.filter = '.'
         return self
 
     def cal_bam_stats(self, pileup_line):
@@ -374,9 +389,9 @@ class Variant:
             if alt_reads != 0:
                 alt_freq = round(alt_reads / total_depth, 2)
                 if alt_fwd != 0 and alt_rev != 0:
-                    bidir = 'T'
+                    bidir = 'Y'
                 else:
-                    bidir = 'F'
+                    bidir = 'N'
             else:
                 alt_freq, bidir = '.', 'N/A'
 
@@ -414,8 +429,10 @@ class Variant:
             for name, val in self.format.items():
                 format_names.append(name)
                 format_vals.append(val)
-            return ('\t'.join(self.mandatory + [';'.join(info_), ':'
-                    .join(format_names), ':'.join(format_vals)]) + '\n')
+            return ('\t'.join([self.chr, self.pos, self.sample_id, 
+                               self.ref, self.alt, self.qual, self.filter] + 
+                              [';'.join(info_), ':'.join(format_names), 
+                               ':'.join(format_vals)]) + '\n')
 
         else:
             info_, format_names, normal_format_vals, tumor_format_vals =\
@@ -427,9 +444,9 @@ class Variant:
                 normal_format_vals.append(val)
             for name, val in self.format['tumor'].items():
                 tumor_format_vals.append(val)
-            return ('\t'.join(self.mandatory + [';'.join(info_), ':'.join(
-                    format_names), ':'.join(normal_format_vals), ':'.join(
-                    tumor_format_vals)]) + '\n')
-
-
+            return ('\t'.join([self.chr, self.pos, self.sample_id,
+                               self.ref, self.alt, self.qual, self.filter] + 
+                              [';'.join(info_), ':'.join(format_names), 
+                               ':'.join(normal_format_vals), 
+                               ':'.join(tumor_format_vals)]) + '\n')
 
