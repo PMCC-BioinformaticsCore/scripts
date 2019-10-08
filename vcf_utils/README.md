@@ -41,7 +41,7 @@ required arguments:
                         must be either germline or somatic
   --regions REGIONS     Region file containing all the variants, used as
                         samtools mpileup
-  --normal NORMAL       Sample id of germline vcf, or normal sample id of
+  --normal NORMAL       Sample ID of germline, or tumor sample ID  of
                         somatic vcf
   --tumor TUMOR         tumor sample ID, required if inputs are somatic vcfs
   --priority PRIORITY [PRIORITY ...]
@@ -50,6 +50,12 @@ required arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+  --priority PRIORITY [PRIORITY ...]
+                        The priority of the callers, must match with the
+                        callers in the source header. Default: sort by alphabetical 
+                        order
+  --columns COLUMNS
+                        Columns to be extracted, seperated by comma
  ```
 
 
@@ -105,7 +111,7 @@ Usage examples:
 - Germline VCFs
 
 ```bash
-python3 combine_vcf.py -i vcf1 -i vcf2 -i vcf3 --columns AD DP AF GT -o combined.vcf --type germline --regions regions.tsv
+python3 combine_vcf.py -i vcf1 -i vcf2 -i vcf3 --columns AD,DP,AF,GT -o combined.vcf --type germline --regions regions.tsv
 samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa sample.bam > regions.mpileup
 bcftools sort combined.vcf -o combined.sorted.vcf
 python3 add_bam_stats.py -i combined.sorted.vcf -o combined.sorted.addbamstats.vcf --type germline -mpileup sample.mpileup
@@ -114,7 +120,7 @@ python3 add_bam_stats.py -i combined.sorted.vcf -o combined.sorted.addbamstats.v
 - For somatic vcfs
 
 ```bash
-python combine_vcf.py -i vcf1 -i vcf2 -i vcf3 --columns AD DP GT -o combined.vcf --type somatic --regions regions.tsv --normal_id normal --tumor_id tumor
+python combine_vcf.py -i vcf1 -i vcf2 -i vcf3 --columns AD,DP,GT -o combined.vcf --type somatic --regions regions.tsv --normal_id normal --tumor_id tumor
 samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa sample_normal.bam > normal.mpileup
 samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa sample_tumor.bam > tumor.mpileup
 bcftools sort combined.vcf -o combined.sorted.vcf python3 add_bam_stats.py -i combined.sorted.vcf -o combined.sorted.addbamstats.vcf --type somatic --normal_id normal --tumor_id tumor --normal_mpileup normal.mpileup --tumor_mpileup tumor.mpileup
