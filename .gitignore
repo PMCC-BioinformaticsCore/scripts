@@ -2,3 +2,5 @@
 .idea/
 *.pyc
 */*/.Dockerfile.swp
+.vscode/
+*/*/cromwell-executions/

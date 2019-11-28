@@ -9,17 +9,16 @@ RUN apt-get update && apt-get install -y \
 
 LABEL name="VarDictJava"
 LABEL maintainer="michael.franklin@petermac.org"
-LABEL build_date="2019-09-24"
-LABEL version=1.6.0
+LABEL build_date="2019-10-14"
+LABEL version=1.7.0
 
 WORKDIR /opt
 
-ENV VARDICT_VERSION 1.6.0
-ENV BCFTOOLS_VERSION 1.9
+ENV VARDICT_VERSION=1.7.0 BCFTOOLS_VERSION=1.9
 
 ENV VARDICT_INSTALL_DIR /opt/vardict/
 
-RUN curl -LO "https://github.com/AstraZeneca-NGS/VarDictJava/releases/download/v1.6/VarDict-${VARDICT_VERSION}.tar"
+RUN curl -LO "https://github.com/AstraZeneca-NGS/VarDictJava/releases/download/${VARDICT_VERSION}/VarDict-${VARDICT_VERSION}.tar"
 RUN mkdir ${VARDICT_INSTALL_DIR} \
     && tar -xvf VarDict-${VARDICT_VERSION}.tar \
     && mv VarDict-${VARDICT_VERSION}/* vardict/ \
