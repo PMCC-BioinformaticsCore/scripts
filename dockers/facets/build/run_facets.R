@@ -47,6 +47,7 @@ parser$add_argument(
   help="Refit with Alternate DiplogR")
 
 opt <- parser$parse_args()
+dir.create(opt$outdir, showWarnings=F)
 setwd(opt$outdir) # run in outdir
 set.seed(1234) # for reproducibility
 snpout <- paste(opt$output_prefix, "snp_pileup_output.txt", sep="_")
@@ -54,8 +55,8 @@ snpout <- paste(opt$output_prefix, "snp_pileup_output.txt", sep="_")
 # set up output file names
 output.clonal.tab<-paste(opt$output_prefix,".clonal.tsv",sep="")
 output.clonal.fig<-paste(opt$output_prefix,".clonal.pdf",sep="")
-output.subclonal.tab<-paste(opt$output_prefix,".subclonal.tsv",sep="")
-output.subclonal.fig<-paste(opt$output_prefix,".subclonal.pdf",sep="")
+#output.subclonal.tab<-paste(opt$output_prefix,".subclonal.tsv",sep="")
+#output.subclonal.fig<-paste(opt$output_prefix,".subclonal.pdf",sep="")
 
 if (opt$diplogR == FALSE){
   system(paste(
@@ -64,7 +65,7 @@ if (opt$diplogR == FALSE){
 }
 
 rcmat <- readSnpMatrix(paste(snpout, ".gz", sep=''))
-xx = preProcSample(rcmat, unmatched=opt$unmatched)
+xx = preProcSample(rcmat, unmatched=opt$unmatched, cval=opt$cval)
 
 if(opt$diplogR != FALSE) {
   oo <- procSample(xx,cval=opt$cval, dipLogR = opt$d)
@@ -80,18 +81,18 @@ plotSample(x=oo,emfit=fit)
 dev.off()
 
 # subclone
-fit2=emcncf2(oo)
-write.table(fit2$cncf,file=output.subclonal.tab,sep="\t",quote=F,row.names=F)
-pdf(output.subclonal.fig)
-plotSample(x=oo,emfit=fit2)
-dev.off()
+#fit2=emcncf2(oo)
+#write.table(fit2$cncf,file=output.subclonal.tab,sep="\t",quote=F,row.names=F)
+#pdf(output.subclonal.fig)
+#plotSample(x=oo,emfit=fit2)
+#dev.off()
 
 file=paste(opt$output_prefix,"_estimates.txt",sep="")
 sink(file=file,type="output")
 paste("Clonal purity=",fit$purity,sep="")
 paste("Clonal ploidy=",fit$ploidy,sep="")
-paste("Subclonal purity=",fit2$purity,sep="")
-paste("Subclonal ploidy=",fit2$ploidy,sep="")
+#paste("Subclonal purity=",fit2$purity,sep="")
+#paste("Subclonal ploidy=",fit2$ploidy,sep="")
 paste("Original alBalLogR=")
 oo$alBalLogR
 sink()
