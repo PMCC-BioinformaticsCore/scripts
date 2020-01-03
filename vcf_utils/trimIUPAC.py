@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Title: combine_vcf
+Title: trim_IUPAD
 Author: Jiaan Yu / Michael Franklin
 Date: 29-05-2019
 Modified: 30-05-2019 (Michael Franklin)
@@ -68,8 +68,8 @@ with open(inpath) as inputfp, open(outpath,'w') as outputfp:
             indAlt = processed.index("ALT")
         else:
             lIndRef, lIndAlt = processed[indRef], processed[indAlt]
-            has_indRefMatch = p.match(lIndRef)
-            has_indAltMatch = p.match(lIndAlt)
+            has_indRefMatch = p.search(lIndRef)
+            has_indAltMatch = p.search(lIndAlt)
             if has_indRefMatch or has_indAltMatch:
                 d = {}
                 if has_indRefMatch:
