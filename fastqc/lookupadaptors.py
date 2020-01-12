@@ -17,13 +17,22 @@
         This script is intended for use in Janis to parse FastQC results to cutadapt.
 """
 
+from typing import List
 
-def lookup_adaptors(fastqc_datafile: str, cutadapt_adaptors_lookup: str):
+def lookup_adaptors(fastqc_datafiles: List[str], cutadapt_adaptors_lookup: str):
+    """
+    :param fastqc_datafiles: List of data files to process
+
+    :param cutadapt_adaptors_lookup: Specifies a file which contains the list of adapter sequences which will
+        be explicity searched against the library. The file must contain sets of named adapters in
+        the form name[tab]sequence. Lines prefixed with a hash will be ignored.
+    :return: Dictionary with form: { "adaptor_sequences": List[str] }
+    """
     import mmap, re, csv
     from io import StringIO
     from sys import stderr
 
-    def get_overrepresented_text():
+    def get_overrepresented_text(f):
         """
         Get the table "Overrepresented sequences" within the fastqc_data.txt
         """
@@ -31,26 +40,27 @@ def lookup_adaptors(fastqc_datafile: str, cutadapt_adaptors_lookup: str):
             br"(?s)>>Overrepresented sequences\t\S+\n(.*?)>>END_MODULE"
         )
         # fastqc_datafile could be fairly large, so we'll use mmap, and then
-        with open(fastqc_datafile) as f, mmap.mmap(
-            f.fileno(), 0, access=mmap.ACCESS_READ
-        ) as fp:
+        with open(f) as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as fp:
             overrepresented_sequences_match = re.search(adapt_section_query, fp)
             if overrepresented_sequences_match is None:
                 raise Exception(
-                    f"Couldn't find query ('{adapt_section_query.decode('utf8')}') in {fastqc_datafile}"
+                    f"Couldn't find query ('{adapt_section_query.decode('utf8')}') in {fastqc_datafiles}"
                 )
 
             return overrepresented_sequences_match.groups()[0].decode("utf8")
 
-    def parse_tsv_table(tbl: str, skip_headers=True):
+    def parse_tsv_table(tbl: str, skip_headers):
         """
         Parse a TSV table from a string using csvreader
         """
 
         rd = csv.reader(StringIO(tbl), delimiter="\t", quotechar='"')
+        ret = list(rd)
+        if len(ret) == 0:
+            return ret
         if skip_headers:
-            next(rd)  # discard headers
-        return list(rd)
+            ret.pop(0)  # discard headers
+        return ret
 
     def get_cutadapt_map():
         """
@@ -81,8 +91,12 @@ def lookup_adaptors(fastqc_datafile: str, cutadapt_adaptors_lookup: str):
         return cutadapt_map
 
     # Start doing the work
-    text = get_overrepresented_text()
-    adaptor_ids = set(a[0] for a in parse_tsv_table(text))
+    adaptor_ids = set()
+    for fastqcfile in fastqc_datafiles:
+        text = get_overrepresented_text(fastqcfile)
+        adaptor_ids = adaptor_ids.union(
+            set(a[0] for a in parse_tsv_table(text, skip_headers=True))
+        )
 
     adaptor_sequences = []
 
@@ -103,3 +117,4 @@ def lookup_adaptors(fastqc_datafile: str, cutadapt_adaptors_lookup: str):
                 )
 
     return {"adaptor_sequences": adaptor_sequences}
+
