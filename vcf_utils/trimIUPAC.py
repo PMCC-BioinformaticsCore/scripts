@@ -4,7 +4,9 @@
 Title: trim_IUPAD
 Author: Jiaan Yu / Michael Franklin
 Date: 29-05-2019
-Modified: 30-05-2019 (Michael Franklin)
+Modifications: 
+    30-05-2019 (Michael Franklin) - General script cleanup
+    03-01-2020 (Jiaan Yu) - Fixed bug when substiting IUPAC code in INDELs
 
 Substitute 'W|K|Y|R|S|M' with 'N'
 """
