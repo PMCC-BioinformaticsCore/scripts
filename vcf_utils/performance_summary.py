@@ -31,7 +31,7 @@ required.add_argument("-o", help="output summary csv name", required=True)
 # optional arguments
 parser._action_groups.append(optional)
 parser.add_argument("--target_flagstat",  help="output of samtools flagstat of bam target on target bed. Only specified for targeted bam")
-parser.add_argument("--rmdup_flagstat",  help="output of samtools flagstat of removed duplicates bam.")
+parser.add_argument("--rmdup_flagstat",  help="output of samtools flagstat of removed duplicates bam. File to be used to extract mapping infomation if specified, instead of the --flagstat file.")
 parser.add_argument('--genome', action='store_true', help="calculate statistics for whole genome data. --target_flagstat must not be speicified")
 args = parser.parse_args()
 
@@ -77,14 +77,26 @@ with open(args.collect_insert_metrics, "r") as f:
 
 
 # flagstat of bam
-flagstat_total_reads_names = ['Total reads', 'Duplicate reads', 'Mapped reads', 'Paired in sequencing', 'Read1','Read2', 'Properly paired', 'With itself and mate mapped', 'Singletons', 'With mate mapped to a different chr', 'With mate mapped to a different chr (mapQ>=5)']
+flagstat_total_names = ['Total reads', 'Secondary reads', 'Supplementary reads', 'Duplicate reads', 'Mapped reads']
+flagstat_total_names2 = ['Paired in sequencing', 'Read1','Read2', 'Properly paired', 'With itself and mate mapped', 'Singletons', 'With mate mapped to a different chr', 'With mate mapped to a different chr (mapQ>=5)']
 
-flagstat_content = open(args.flagstat, 'r').readlines()
-flagstat_content = [flagstat_content[0]] + flagstat_content[3:]
-#print(flagstat_content)
+# Total / Duplicates / Mapped reads get from flagstat
+flagstat_lines = open(args.flagstat, 'r').readlines()
+for line, name in zip(flagstat_lines, flagstat_total_names):
+    output_dict[name] = line.split(" ")[0]
 
-for i, line in enumerate(flagstat_content):
-    output_dict[flagstat_total_reads_names[i]] = line.split(" ")[0]
+if not args.rmdup_flagstat: # Use the flagstat with duplicates
+    #print(flagstat_lines)
+    for i, line in enumerate(flagstat_lines[5:]):
+        output_dict[flagstat_total_names2[i]] = line.split(" ")[0]
+    output_dict['Mapped reads minus duplicates'] = "NA"
+
+else:
+    rmdup_flagstat_lines = open(args.rmdup_flagstat, 'r').readlines()
+    for i, line in enumerate(rmdup_flagstat_lines[5:]):
+        output_dict[flagstat_total_names2[i]] = line.split(" ")[0]
+    output_dict['Mapped reads minus duplicates'] = str(int(output_dict['Mapped reads'])\
+        - int(output_dict['Duplicate reads']))
 
 output_dict['Total reads minus duplicates'] = str(
     int(output_dict['Total reads']) - int(output_dict['Duplicate reads']))
@@ -95,42 +107,40 @@ if output_dict['Total reads'] != '0':
 else:
     output_dict['% Reads mapped'] = "NA"
 
-if output_dict['Total reads'] != '0':
+if output_dict['Mapped reads'] != '0':
     output_dict['% Mapped reads duplicates'] = "{:0.2f}".format(
-        float(output_dict['Duplicate reads']) / float(output_dict['Total reads']) * 100)
+        float(output_dict['Duplicate reads']) / float(output_dict['Mapped reads']) * 100)
 else:
     output_dict['% Mapped reads duplicates'] = "NA"
-
-# Mapped duplicates
-if args.rmdup_flagstat:
-    with open(args.rmdup_flagstat, 'r') as f:
-        for line in f:
-            if line.endswith('duplicates'):
-                line = line.split(' ')
-                output_dict['Mapped reads minus duplicates'] = str(
-                    int(output_dict['Mapped reads'] - int(line[0])))
-                break
-else:
-    output_dict['Mapped reads minus duplicates'] = "NA"
 
 # when flagstat of target bam provided
 flagstat_target_reads_names = ['OnTarget dupliate reads', 'OnTarget mapped reads', 'OnTarget paired in sequencing','OnTarget read1','OnTarget read2','OnTarget properly paired', 'OnTarget With itself and mate mapped','OnTarget singletons','OnTarget with mate mapped to a different chr','OnTarget with mate mapped to a different chr (mapQ>=5)']
 
 if args.target_flagstat:
-    target_flagstat_content = open(args.target_flagstat, 'r').readlines()
-    for i, line in enumerate(target_flagstat_content[3:]):
+    target_flagstat_lines = open(args.target_flagstat, 'r').readlines()
+    for i, line in enumerate(target_flagstat_lines[3:]):
         output_dict[flagstat_target_reads_names[i]] = line.split(" ")[0]
+
 else:
     for i in flagstat_target_reads_names:
         output_dict[i] = "NA"
-    output_dict['Mapped reads minus duplicates'] = "NA"
+    output_dict['% Reads OnTarget'] = "NA"
 
+# if --rmdup_flagstat provided
 if output_dict['Mapped reads'] != '0' and output_dict['OnTarget mapped reads'] != 'NA':
-    output_dict['% Reads OnTarget'] = "{:0.2f}".format(
-        float(output_dict['OnTarget mapped reads']) / 
-        float(output_dict['Mapped reads']) * 100)
+    if args.rmdup_flagstat:
+        output_dict['% Reads OnTarget'] = "{:0.2f}".format(
+            float(output_dict['OnTarget mapped reads']) /
+            (float(output_dict['Mapped reads']) -\
+            float(output_dict['Duplicate reads'])) * 100)
+    else:
+        output_dict['% Reads OnTarget'] = "{:0.2f}".format(
+            float(output_dict['OnTarget mapped reads']) /
+            float(output_dict['Mapped reads']) * 100)
 else:
     output_dict['% Reads OnTarget'] = "NA"
+#print(output_dict['% Reads OnTarget'])
+
 
 if output_dict['OnTarget mapped reads'] != '0' and output_dict['OnTarget mapped reads'] != 'NA' and output_dict['OnTarget dupliate reads'] != 'NA':
     output_dict['% OnTarget duplicates'] = "{:0.2f}".format(
@@ -161,7 +171,6 @@ with open(args.coverage, 'r') as f:
 mean_coverage = total_coverage / numtargetbases
 output_dict['Mean coverage for target bases'] = "{:0.2f}".format(mean_coverage)
 one_fifth_mean = mean_coverage * 0.2
-#print(coverage_dict)
 
 for depth in sorted([i for i in coverage_dict.keys()]):
     if depth >= 1:
@@ -193,8 +202,11 @@ output_dict['% Target bases with one fifth of mean coverage'] = "{:0.2f}".format
 # for k,v in output_dict.items():
 #     print(k, v)
 
-with safe_open_w(args.o + ".csv") as f:
-    f.write(','.join(header) + "\n")
-    f.write(','.join([output_dict[i] for i in header]) + "\n")
-
+if not "/" in args.o:
+    f = open(args.o + ".csv", 'w')
+else:
+    f = safe_open_w(args.o + ".csv")
+f.write(','.join(header) + "\n")
+f.write(','.join([output_dict[i] for i in header]) + "\n")
+f.close()
 #print([output_dict[i] for i in header])
