@@ -111,7 +111,7 @@ class Variant:
             try:
                 self.info[i.split('=')[0]] = i.split('=')[1]
             except:
-                pass
+                self.info[i] = i
         for name, val in zip(line[8].split(':'), line[9].split(':')):
             self.format[name] = val
 
@@ -159,7 +159,7 @@ class Variant:
             try:
                 self.info[i.split('=')[0]] = i.split('=')[1]
             except:
-                pass
+                self.info[i] = i
         for name, val in zip(line[8].split(':'), line[n_index].split(':')):
             normal_dict[name] = val
         for name, val in zip(line[8].split(':'), line[t_index].split(':')):
@@ -194,7 +194,10 @@ class Variant:
         self.variant_key = '\t'.join(line[:2] + line[3:5])
 
         for i in line[7].split(';'):
-            self.info[i.split('=')[0]] = i.split('=')[1]
+            try:
+                self.info[i.split('=')[0]] = i.split('=')[1]
+            except:
+                self.info[i] = i
 
         if not somatic:
             for name, val in zip(line[8].split(':'), line[9].split(':')):
@@ -425,7 +428,10 @@ class Variant:
         if not somatic:
             info_, format_names, format_vals = [], [], []
             for name, val in self.info.items():
-                info_.append('='.join([name, val]))
+                if name == val:
+                    info_.append(name)
+                else:
+                    info_.append('='.join([name, val]))
             for name, val in self.format.items():
                 format_names.append(name)
                 format_vals.append(val)
@@ -438,7 +444,10 @@ class Variant:
             info_, format_names, normal_format_vals, tumor_format_vals =\
                 [], [], [], []
             for name, val in self.info.items():
-                info_.append('='.join([name, val]))
+                if name == val:
+                    info_.append(name)
+                else:
+                    info_.append('='.join([name, val]))
             for name, val in self.format['normal'].items():
                 format_names.append(name)
                 normal_format_vals.append(val)

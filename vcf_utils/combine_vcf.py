@@ -46,8 +46,8 @@ required = parser.add_argument_group("required arguments")
 required.add_argument("-i",  help="input vcfs, the priority of the vcfs will be \
                       based on the order of the input. This parameter can be \
                       specified more than once", action="append", required=True)
-required.add_argument("--columns", help="A list of columns, seperated by ',' (We need to have a talk about this \
-                      parameter lol)", required=True)
+required.add_argument("--columns", help="A list of columns, seperated by ','",
+                      required=True)
 required.add_argument("-o", help="output vcf (unsorted)", required=True)
 required.add_argument("--type", help="must be either germline or somatic", required=True,
                       choices=recognised_modes)
