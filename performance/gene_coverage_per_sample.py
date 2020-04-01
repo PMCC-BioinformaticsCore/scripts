@@ -1,18 +1,12 @@
 #!/usr/bin/python3
 
 import sys
-import time
 import threading
-import inspect
 import os
-import getopt
 import re
 from collections import defaultdict as dd
-
-import csv, glob, copy
-from numpy import matrix, mean
-from optparse import OptionParser
-from os.path import isfile, join
+import csv
+import argparse
 
 
 """
@@ -68,7 +62,7 @@ def add_empty_row_of_lists(matrix, numCols, sizeList):
     matrix.append([[0.0] * sizeList] * numCols)
 
 
-def proc(procId, sample_list, options, geneObject, regionsObject, folds):
+def proc(procId, sample_list, args, geneObject, regionsObject, folds):
     for sample in sample_list:
 
         # Initialise values
@@ -175,65 +169,59 @@ def chunker(seq, size):
 
 def main():
     procId = os.getpid()
-    parser = OptionParser()
-    parser.add_option(
-        "-l", "--list", type="string", dest="list", help="List file: SampleName Path"
-    )
-    parser.add_option(
-        "-n", "--name", type="string", dest="name", help="Sample name if list not used"
-    )
-    parser.add_option(
-        "-p", "--path", type="string", dest="path", help="Sample path if list not used"
-    )
-    # parser.add_option('-b', '--bed',type='string',dest="bed",help="Bed file")
-    parser.add_option(
-        "-g", "--gene", type="string", dest="gene", help="Output gene file"
-    )
-    parser.add_option(
-        "-r", "--region", type="string", dest="region", help="Output region file"
-    )
-    parser.add_option(
-        "-f",
-        "--folds",
-        type="string",
-        dest="folds",
-        help="Folds, quoted and commna sepparated, default 1,10,20,100",
-    )
-    # parser.add_option('-d', '--remove_duplicates',action="store_false",default=True,dest="dups",help="Remove marked duplicates in analysis, default:false")
-    parser.add_option(
-        "-t",
-        "--threads",
-        dest="threads",
-        default=32,
-        type=int,
-        help="number of threads, default:32",
-    )
 
-    (options, args) = parser.parse_args()
-    if options.gene is None or options.region is None:
+# Rewrite the options using argparse
+# Two options are deprecated: -b and -d
+    parser = argparse.ArgumentParser(description="Gene or region coverage of bam")
+    parser.add_argument(
+        "-l", "--list", dest="list", help="List file: SampleName Path", required=False)
+    parser.add_argument(
+        "-n", "--name", dest="name", help="Sample name if list not used", required=False)
+    parser.add_argument(
+        "-p", "--path", dest="path", help="Sample path if list not used", required=False)
+    parser.add_argument(
+        "-b", "--bed", dest="bed", help="(Deprecated option) Bed file", required=False)
+    parser.add_argument(
+        "-g", "--gene", dest="gene", help="Output gene file", required=False)
+    parser.add_argument(
+        "-r", "--region", dest="region", help="Output region file", required=False)
+    parser.add_argument(
+        "-f", "--folds", dest="folds",
+        help="Folds, quoted and commna sepparated, default 1,10,20,100",
+        required=False)
+    parser.add_argument(
+        "-d", "--remove_duplicates", action="store_false", default=True, dest="dups",
+        help="(Deprecated option) Remove marked duplicates in analysis, default:false",
+        required=False)
+    parser.add_argument(
+        "-t", "--threads", dest="threads", default=32,
+        type=int, help="number of threads, default:32", required=False)
+
+    args = parser.parse_args()
+    if args.gene is None or args.region is None:
         parser.print_help()
         sys.exit("ERROR: Missing argument")
-    if options.folds is None:
+    if args.folds is None:
         folds = ["1", "10", "20", "100", "150", "200", "500", "1000"]
     else:
-        folds = options.folds.split(",")
+        folds = args.folds.split(",")
 
-    if options.list is None and (options.name is None and options.path is None):
+    if args.list is None and (args.name is None and args.path is None):
         parser.print_help()
         sys.exit("ERROR: Missing argument, plese specify list or sample")
 
-    if options.list is not None:
-        num_samples = file_len(options.list)
-        indexFile = open(options.list, "rU")
+    if args.list is not None:
+        num_samples = file_len(args.list)
+        indexFile = open(args.list, "rU")
         indexObject = csv.reader(indexFile, delimiter="\t")
 
     else:
-        indexObject = [[options.name, options.path]]
+        indexObject = [[args.name, args.path]]
         num_samples = 1
-    geneFile = open(options.gene, "w+")
+    geneFile = open(args.gene, "w+")
     geneObject = csv.writer(geneFile, delimiter="\t", lineterminator="\n")
 
-    regionsFile = open(options.region, "w+")
+    regionsFile = open(args.region, "w+")
     regionsObject = csv.writer(regionsFile, delimiter="\t", lineterminator="\n")
 
     # Write header
@@ -247,15 +235,15 @@ def main():
     )
     # parse bed file for each sample
     count = 0
-    div = num_samples / options.threads
-    mod = num_samples % options.threads
-    if num_samples <= options.threads:
+    div = num_samples / args.threads
+    mod = num_samples % args.threads
+    if num_samples <= args.threads:
         for sample in indexObject:
             Thread(
                 proc,
                 str(count) + "_" + str(procId),
                 [sample],
-                options,
+                args,
                 geneObject,
                 regionsObject,
                 folds,
@@ -271,7 +259,7 @@ def main():
                 proc,
                 str(count) + "_" + str(procId),
                 sample,
-                options,
+                args,
                 geneObject,
                 regionsObject,
                 folds,
