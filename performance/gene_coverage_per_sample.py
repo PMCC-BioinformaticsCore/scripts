@@ -16,7 +16,7 @@ from os.path import isfile, join
 
 
 """
-Title: performance_summary
+Title: gene_coverage_per_sample
 Creator: Jason Li
 Author: Jiaan Yu
 Date: 27-02-2020
@@ -92,52 +92,53 @@ def proc(procId, sample_list, options, geneObject, regionsObject, folds):
 
         with open(sample[1], "rU") as bed:
             for line in bed:
-                line = line.strip().split("\t")
-                genes = line[3].split(";")
-                for gene_coln in genes:
-                    gene = re.sub("_ex.*", "", gene_coln)
-                    reg = line[3] + ":" + line[0] + ":" + line[1] + "-" + line[2]
-                    depth, count, length, percent = (
-                        float(line[4]),
-                        int(line[5]),
-                        float(line[6]),
-                        float(line[7]),
-                    )
+                if not line.startswith("all"):
+                    line = line.strip().split("\t")
+                    genes = line[3].split(";")
+                    for gene_coln in genes:
+                        gene = re.sub("_ex.*", "", gene_coln)
+                        reg = line[3] + ":" + line[0] + ":" + line[1] + "-" + line[2]
+                        depth, count, length, percent = (
+                            float(line[4]),
+                            int(line[5]),
+                            float(line[6]),
+                            float(line[7]),
+                        )
 
-                    if reg not in region_list:
-                        region_len[reg] = length
-                        region_folds[reg] = [
-                            percent if depth >= f else 0 for f in folds
-                        ]
-                        region_list.append(reg)
-                        gene_len[gene] += length
-                    else:
-                        region_folds_list = [
-                            percent if depth >= f else 0 for f in folds
-                        ]
-                        region_folds[reg] = [
-                            i + j for i, j in zip(region_folds_list, region_folds[reg])
-                        ]
-                    region_depth[reg] += depth * count
-                    region_vals[reg].append(depth)
+                        if reg not in region_list:
+                            region_len[reg] = length
+                            region_folds[reg] = [
+                                percent if depth >= f else 0 for f in folds
+                            ]
+                            region_list.append(reg)
+                            gene_len[gene] += length
+                        else:
+                            region_folds_list = [
+                                percent if depth >= f else 0 for f in folds
+                            ]
+                            region_folds[reg] = [
+                                i + j for i, j in zip(region_folds_list, region_folds[reg])
+                            ]
+                        region_depth[reg] += depth * count
+                        region_vals[reg].append(depth)
 
-                    # print(region_depth, region_vals)
-                    # print(region_len, region_folds, region_list)
+                        # print(region_depth, region_vals)
+                        # print(region_len, region_folds, region_list)
 
-                    if gene not in gene_list:
-                        gene_folds[gene] = [
-                            percent * length if depth >= f else 0 for f in folds
-                        ]
-                        gene_list.append(gene)
-                    else:
-                        gene_folds_list = [
-                            percent * length if depth >= f else 0 for f in folds
-                        ]
-                        gene_folds[gene] = [
-                            i + j for i, j in zip(gene_folds_list, gene_folds[gene])
-                        ]
-                    gene_depth[gene] += depth * count
-                    gene_vals[gene].append(depth)
+                        if gene not in gene_list:
+                            gene_folds[gene] = [
+                                percent * length if depth >= f else 0 for f in folds
+                            ]
+                            gene_list.append(gene)
+                        else:
+                            gene_folds_list = [
+                                percent * length if depth >= f else 0 for f in folds
+                            ]
+                            gene_folds[gene] = [
+                                i + j for i, j in zip(gene_folds_list, gene_folds[gene])
+                            ]
+                        gene_depth[gene] += depth * count
+                        gene_vals[gene].append(depth)
 
         # print(gene_depth, gene_vals)
         # print(gene_len, [f / gene_len[gene] for f in gene_folds[gene]], gene_list)
