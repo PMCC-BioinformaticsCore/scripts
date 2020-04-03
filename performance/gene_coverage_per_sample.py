@@ -62,7 +62,7 @@ def add_empty_row_of_lists(matrix, numCols, sizeList):
     matrix.append([[0.0] * sizeList] * numCols)
 
 
-def proc(procId, sample_list, args, geneObject, regionsObject, folds):
+def proc(procId, sample_list, geneObject, regionsObject, folds):
     for sample in sample_list:
 
         # Initialise values
@@ -74,15 +74,12 @@ def proc(procId, sample_list, args, geneObject, regionsObject, folds):
 
         # folds = ["1", "10", "20", "100", "150", "200", "500", "1000"]
         folds = [float(i) for i in folds]
-        # sample = ["pesduo sample"]
 
         print("Thread:", procId)
         print("Sample: ", sample[0])
         # print("Bedtools...")
         # print("Generating stats")
         dirt = os.getcwd()
-
-        # parse bed file?
 
         with open(sample[1], "rU") as bed:
             for line in bed:
@@ -174,11 +171,14 @@ def main():
 # Two options are deprecated: -b and -d
     parser = argparse.ArgumentParser(description="Gene or region coverage of bam")
     parser.add_argument(
-        "-l", "--list", dest="list", help="List file: SampleName Path", required=False)
+        "-l", "--list", dest="list",
+        help="List file: A tsv file contains SampleName\tPathToBedtoolsOutput on each line",
+        required=False)
     parser.add_argument(
         "-n", "--name", dest="name", help="Sample name if list not used", required=False)
     parser.add_argument(
-        "-p", "--path", dest="path", help="Sample path if list not used", required=False)
+        "-p", "--path", dest="path", help="Path to bedtools output if list not used",
+        required=False)
     parser.add_argument(
         "-b", "--bed", dest="bed", help="(Deprecated option) Bed file", required=False)
     parser.add_argument(
@@ -208,7 +208,7 @@ def main():
 
     if args.list is None and (args.name is None and args.path is None):
         parser.print_help()
-        sys.exit("ERROR: Missing argument, plese specify list or sample")
+        sys.exit("ERROR: Missing argument, plese specify list file or sample name and path")
 
     if args.list is not None:
         num_samples = file_len(args.list)
@@ -243,7 +243,6 @@ def main():
                 proc,
                 str(count) + "_" + str(procId),
                 [sample],
-                args,
                 geneObject,
                 regionsObject,
                 folds,
@@ -259,7 +258,6 @@ def main():
                 proc,
                 str(count) + "_" + str(procId),
                 sample,
-                args,
                 geneObject,
                 regionsObject,
                 folds,
