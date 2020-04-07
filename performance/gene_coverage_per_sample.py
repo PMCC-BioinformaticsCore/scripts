@@ -81,7 +81,7 @@ def proc(procId, sample_list, geneObject, regionsObject, folds):
         # print("Generating stats")
         dirt = os.getcwd()
 
-        with open(sample[1], "rU") as bed:
+        with open(sample[1], "r") as bed:
             for line in bed:
                 if not line.startswith("all"):
                     line = line.strip().split("\t")
@@ -212,7 +212,7 @@ def main():
 
     if args.list is not None:
         num_samples = file_len(args.list)
-        indexFile = open(args.list, "rU")
+        indexFile = open(args.list, "r")
         indexObject = csv.reader(indexFile, delimiter="\t")
 
     else:
