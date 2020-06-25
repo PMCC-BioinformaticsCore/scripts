@@ -12,8 +12,8 @@ import argparse
 """
 Title: gene_coverage_per_sample
 Creator: Jason Li
-Author: Jiaan Yu
 Date: 27-02-2020
+Modified: 23-06-2020 by Jiaan Yu
 
 This script groups coverage by gene per sample,
 it uses coverage stats (bedtools) from 
@@ -142,7 +142,7 @@ def proc(procId, sample_list, geneObject, regionsObject, folds):
                 "{:0.2f}".format(gene_depth[gene] / gene_len[gene]),
                 str(min(gene_vals[gene])),
                 str(max(gene_vals[gene])),
-            ] + ["{:0.2f}".format(f / gene_len[gene]) for f in gene_folds[gene]]
+            ] + ["{:0.2f}".format(f / gene_len[gene] * 100) for f in gene_folds[gene]]
             # print(",".join(row))
             with lock:
                 geneObject.writerow(row)
@@ -154,7 +154,7 @@ def proc(procId, sample_list, geneObject, regionsObject, folds):
                 "{:0.2f}".format(region_depth[reg] / region_len[reg]),
                 str(min(region_vals[reg])),
                 str(max(region_vals[reg])),
-            ] + ["{:0.2f}".format(f) for f in region_folds[reg]]
+            ] + ["{:0.2f}".format(f * 100) for f in region_folds[reg]]
             # print(",".join(row))
             with lock:
                 regionsObject.writerow(row)
