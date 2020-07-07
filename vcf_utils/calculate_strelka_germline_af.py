@@ -5,7 +5,9 @@ Title: calculate_strelka_germline_af
 Author: Jiaan Yu
 Date: 03-07-2020
 
-Calculate AF for strelka germline vcf. Works for both SNVs and INDELs.
+This script
+ - Calculate AF value for each variant (both SNVs and INDELs)
+ - Make DP for INDELs variant by coping over the value of DPI
 
 """
 import re
