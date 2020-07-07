@@ -175,13 +175,13 @@ else:
 
     if args.priority:
         if set(callers) != set(args.priority):
-            sys.exit("The callers specified in the argument priority [{0}]are different from the vcfs [{1}]".format(', '.join(map(str, priority)), ', '.join(map(str, callers))))
+            sys.exit("The callers specified in the argument priority [{0}]are different from the vcfs [{1}]".format(', '.join(map(str, args.priority)), ', '.join(map(str, callers))))
 
     # Sort the vcf
     vcf_list, callers = sort_vcf(args.priority, callers, vcf_list)
 
     for i, vcf in enumerate(vcf_list):
-        combined_variants += list(vcf.variants.keys())
+        combined_variants += list(vcf.variants.keys())         
         # Dictionary that let varaint refer back to vcf
         for var in vcf.variants.keys():
             variant_to_vcf_dict[var].append(i)
