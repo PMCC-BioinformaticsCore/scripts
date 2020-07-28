@@ -121,7 +121,7 @@ class Variant:
         # Get AF and DP
         if caller == 'strelka':
             # use DPI as DP for INDELs in strelka
-            if not len(self.ref) == len(self.alt) == 1:
+            if "DPI" in self.format.keys():
                 self.format['DP'] = self.format.get("DPI", ".")
 
         # Calculate the allele frequency regardless
