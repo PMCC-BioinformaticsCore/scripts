@@ -18,10 +18,10 @@ from variant import Variant
 
 AD_HEADER_LINE='##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Extracted allelic \
 depths for the ref and alt alleles based on strelka recommendation \
-- Calculated By Bioinformatics Dept">>\n'
-AF_HEADER_LINE='####INFO=<ID=AF,Number=A,Type=Float,Description="Allele \
+- Calculated By Bioinformatics Dept">\n'
+AF_HEADER_LINE='##FORMAT=<ID=AF,Number=A,Type=Float,Description="Allele \
 Frequency, for each ALT allele, in the same order as listed - Calculated By \
-Bioinformatics Dept">>\n'
+Bioinformatics Dept">\n'
 
 parser = argparse.ArgumentParser(description="Calculate AF for strelka somatic vcf")
 parser.add_argument("-i", dest="input", help="Input strelka somatic vcf", required=True)

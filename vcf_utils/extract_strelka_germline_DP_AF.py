@@ -15,9 +15,9 @@ import argparse
 import sys
 from variant import Variant
 
-AF_HEADER_LINE='####INFO=<ID=AF,Number=A,Type=Float,Description="Allele \
+AF_HEADER_LINE='##FORMAT=<ID=AF,Number=A,Type=Float,Description="Allele \
 Frequency, for each ALT allele, in the same order as listed - Calculated By \
-Bioinformatics Dept">>\n'
+Bioinformatics Dept">\n'
 
 parser = argparse.ArgumentParser(description="Calculate AF for strelka germline vcf")
 parser.add_argument("-i", dest="input", help="Input strelka germline vcf", required=True)
