@@ -58,5 +58,8 @@ with open(args.input, "r") as f_vcf, open(args.output, "w") as f_vcf_out:
                         refCounts = int(variant.format[vtype]["TAR"].split(",")[0])
                         altCounts = int(variant.format[vtype]["TIR"].split(",")[0])
                     variant.format[vtype]["AD"] = str(refCounts) + "," + str(altCounts)
-                    variant.format[vtype]["AF"] = str(round(altCounts / float(refCounts + altCounts), 2))
+                    if refCounts + altCounts != 0:
+                        variant.format[vtype]["AF"] = str(round(altCounts / float(refCounts + altCounts), 2))
+                    else:
+                        variant.format[vtype]["AF"] = "0.00"
                 f_vcf_out.write(variant.write(somatic=True))
