@@ -84,7 +84,7 @@ elif args.type == 'somatic':
     elif not args.normal_id:
         sys.exit('normal sample id is required for somatic vcf')
     elif not args.tumor_id:
-        sys.exist('tumor sample id is required for somatic vcf')
+        sys.exit('tumor sample id is required for somatic vcf')
     else:
         try:
             f = open(args.normal_mpileup, 'r')
