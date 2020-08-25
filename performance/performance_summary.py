@@ -158,6 +158,7 @@ numbaseswithonefifthmean = 0
 
 with open(args.coverage, 'r') as f:
     for line in f:
+        # This part located at the end of the bedtools coverage input
         if line.startswith('all') or line.startswith('genome'):
             line = line.split('\t')
             depth = int(line[1])
@@ -167,6 +168,10 @@ with open(args.coverage, 'r') as f:
             total_coverage += depth * numbases
             depth_list.append(depth)
             numbases_list.append(numbases)
+    # Safe guard in case the input is truncated at the end
+    if not ( (line.startswith('all')) or (line.startswith('genome')) ):
+        sys.exit("Wrong bedtools coverage input, or input is truncated.")
+
 # Calculate mean coverage, 1/5 of coverage
 mean_coverage = total_coverage / numtargetbases
 output_dict['Mean coverage for target bases'] = "{:0.2f}".format(mean_coverage)
