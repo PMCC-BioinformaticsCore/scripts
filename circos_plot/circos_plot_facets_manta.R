@@ -119,6 +119,8 @@ linkdat_samechrom = linkdat[[2]]
 cnvcols = sapply(mapdat$CN, function(x) {cn=ifelse(x>3, 4, x); c("blue","blue","black","red",rep("red",20))[cn+1]})
 
 # Draw plot
+print(paste("Creating output directory:", outdir, sep=" "))
+dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
 outf=paste(outdir, "/", paste(samplename, samplename_normal, sep="--"),".pdf",sep="")
 print(paste("Writing to file", outf, sep=" "))
 pdf(outf,width=7,height=7)
