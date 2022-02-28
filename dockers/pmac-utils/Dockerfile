@@ -3,16 +3,16 @@ FROM rocker/r-ver:4.0.2
 
 RUN apt-get update && \
     apt-get -y install zlib1g-dev \
-        libxml2 \
-        libbz2-dev \
-        liblzma-dev \
-        libcurl4-openssl-dev \
-        python3.7 python3-pip python3-setuptools
+    libxml2 \
+    libbz2-dev \
+    liblzma-dev \
+    libcurl4-openssl-dev \
+    python3.7 python3-pip python3-setuptools
 
 RUN R -e 'install.packages("https://cran.r-project.org/src/contrib/Archive/BiocManager/BiocManager_1.30.10.tar.gz",repos = NULL, type = "source")' && \
     R -e 'BiocManager::install("OmicCircos", version="3.12")' && \
     R -e 'BiocManager::install("dplyr", version="3.12")' && \
-    R -e 'install.packages("https://cran.rstudio.com/src/contrib/matrixStats_0.60.0.tar.gz", repos=NULL, type="source")' && \
+    R -e 'install.packages("https://cran.r-project.org/src/contrib/Archive/matrixStats/matrixStats_0.60.0.tar.gz", repos=NULL, type="source")' && \
     R -e 'BiocManager::install("VariantAnnotation", version="3.12")' && \
     R -e 'BiocManager::install("StructuralVariantAnnotation", version="3.12")' && \
     R -e 'BiocManager::install("rtracklayer", version="3.12")'
