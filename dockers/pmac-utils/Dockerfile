@@ -15,7 +15,8 @@ RUN R -e 'install.packages("https://cran.r-project.org/src/contrib/Archive/BiocM
     R -e 'install.packages("https://cran.r-project.org/src/contrib/Archive/matrixStats/matrixStats_0.60.0.tar.gz", repos=NULL, type="source")' && \
     R -e 'BiocManager::install("VariantAnnotation", version="3.12")' && \
     R -e 'BiocManager::install("StructuralVariantAnnotation", version="3.12")' && \
-    R -e 'BiocManager::install("rtracklayer", version="3.12")'
+    R -e 'BiocManager::install("rtracklayer", version="3.12")' && \
+    R -e 'BiocManager::install("BSgenome.Hsapiens.UCSC.hg38", version="3.12")'
 
 COPY circos_plot/ /app/circos_plot/
 COPY vcf_utils/ /app/vcf_utils/
