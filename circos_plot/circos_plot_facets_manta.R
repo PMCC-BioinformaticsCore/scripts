@@ -6,11 +6,17 @@ suppressMessages(library(rtracklayer))
 suppressMessages(library(BSgenome.Hsapiens.UCSC.hg38))
 options(stringsAsFactors=F)
 
-# Script works for Manta version 1.5 
-# And facets-suite:2.0.8
+# Script works for Manta version 1.5 + facets-suite:2.0.8
 # For human genome hg19 and hg38
 # Example inputs: facets: *_hisens.rds; manta: somaticSV.vcf.gz
-# Usage: circos_plot_facets_manta.R $tumour_id $normal_id $facet_rds_file $manta_sv_file $output_dir $manta_filter_qual[optional, use "PASS" by default]
+# Usage: circos_plot_facets_manta.R + positional arguments
+#           Pos 1: String, tumour id
+#           Pos 2: String, normal id
+#           Pos 3: File, *_hisens.rds from facets
+#           Pos 4: File, somaticSV.vcf.gz from strelka
+#           Pos 5: String, name of output folder
+#           Pos 6: String, genome to use, hg19 or hg38
+#           Pos 7: Integer(optional), PASS by default
 
 gen_link_dat = function(svdat, keep_deletions=T, valid_chroms = c(1:22,"X","Y")){
   svdat = svdat[svdat$FILTER == "PASS",]
@@ -85,6 +91,7 @@ gen_link_dat = function(svdat, keep_deletions=T, valid_chroms = c(1:22,"X","Y"))
 }
 
 # Agruments
+# To do: better use argparse
 args = commandArgs(trailingOnly = T)
 samplename=args[1]
 samplename_normal=args[2]
