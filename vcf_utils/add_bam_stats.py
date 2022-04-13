@@ -8,8 +8,27 @@ Date: 28-02-2019
 Add variant statistics from bam file to vcf.
 Works on both germline and somatic variants.
 Users are advised to run mpileup tools to generate mpileup file. 
-An example to run:
+Example samtools command:
 samtools mpileup -A -B -Q 0 -d 10000 -l regions.tsv -f reference.fa bam_file > mpileup_file
+
+Examples
+For Germline (or Tumour only) data
+combine_vcf.py
+add_bam_stats.py
+  -i [File, vcf]
+  --mpileup [File, mpileup output of bam]
+  --type 'germline'
+  -o [String, output filename]
+
+For Somatic paired data
+add_bam_stats.py
+  -i [File, vcf]
+  --normal_mpileup [File, mpileup output of normal bam]
+  --tumor_mpileup [File, mpileup output of tumor bam]
+  --tumor_id [String, tumor sample id]
+  --type 'somatic'
+  -o [String, output filename]
+
 """
 
 ###############################################################################

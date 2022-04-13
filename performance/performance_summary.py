@@ -5,13 +5,25 @@ Title: performance_summary
 Author: Jiaan Yu
 Date: 18-02-2020
 
-Performance summary of bam. Prequisite: 
-(1) gatk CollectInsertSizeMetrics output
--I $input_bam -O $insert_size_metrics_txt -H $insert_size_plot_pdf
-(2) samtools flagstat output on bam
-(3) samtools flagstat on target bam on target bed file (optional for target region,
-    disabled for whole genome)
-(4) bedtools coverageBed for bam with targeted bed or bedtools genomeCoverageBed on whole genome bam
+Summary of bam
+
+Examples:
+For whole genome data
+performance_summary.py
+  --flagstat [samtools flagstat output on bam]
+  --rmdup_flagstat [samtools flagstat on rmdup bam]
+  --collect_insert_metrics [GATK CollectInsertSizeMetrics output text file]
+  --coverage [bedtools genomeCoverageBed on bam]
+  -o [output filename]
+
+For targeted data
+performance_summary.py
+  --flagstat [samtools flagstat output on bam]
+  --rmdup_flagstat [samtools flagstat on rmdup bam]
+  --target_flagstat [samtools flagstat on rmdup + targeted bed bam]
+  --collect_insert_metrics [GATK CollectInsertSizeMetrics output text file]
+  --coverage [bedtools genomeCoverageBed on bam]
+  -o [output filename]
 
 """
 
