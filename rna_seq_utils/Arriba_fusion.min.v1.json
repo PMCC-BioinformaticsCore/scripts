@@ -1,0 +1,54 @@
+{
+	"header": "#",
+	"source": "Arriba",
+	"delimiter": "\t",
+	"filter": {
+		"filter": 0,
+		"column": -4,
+		"delimiter": ",",
+		"pass": "."
+	},
+	"required": {
+		"GeneA": 0,
+		"GeneB": 1,
+		"chromosomeA": {
+			"column": 4,
+			"delimiter": ":",
+			"element": 0
+		},
+		"chromosomeB": {
+			"column": 5,
+			"delimiter": ":",
+			"element": 0
+		},
+		"posA": {
+			"column": 4,
+			"delimiter": ":",
+			"element": 1
+		},
+		"posB": {
+			"column": 5,
+			"delimiter": ":",
+			"element": 1
+		},
+		"strandA": {
+			"column": 2,
+			"delimiter": "/",
+			"element": 1
+		},
+		"strandB": {
+			"column": 3,
+			"delimiter": "/",
+			"element": 1
+		}
+	},
+	"custom": {
+                "CONFIDENCE": {
+                        "column": 14,
+                        "entry": "INFO",
+                        "type": "String",
+                        "number": "1",
+                        "description": "The confidence of the prediction: low, medium, or high"
+                }
+	}
+}

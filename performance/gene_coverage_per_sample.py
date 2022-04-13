@@ -20,7 +20,12 @@ it uses coverage stats (bedtools) from
 each region specified in the bed file, and 
 averages(weighted) the coverage by gene 
 
-Pre-requisite: run bedtools coverageBed -abam $bam -b $bed -hist
+Example:
+gene_coverage_per_sample.py
+  --name [String, sample id]
+  --path [File, output of "bedtools coverageBed -abam $bam -b $bed -hist"]
+  --gene [String, output gene file]
+  --region [String, output region file]
 
 Example Bed File:
 16	23614779	23614990	PALB2
@@ -28,7 +33,6 @@ Example Bed File:
 16	23625324	23625412	PALB2;TP53
 
 Example bedtools output:
-
 19	852271	852451	ELANE	9	6	180	0.0333333
 19	852271	852451	ELANE	10	32	180	0.1777778
 19	852271	852451	ELANE	11	26	180	0.1444445

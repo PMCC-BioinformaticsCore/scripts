@@ -1,6 +1,31 @@
 #!/usr/bin/python3
 # Based on github repo:
 # https://github.com/J35P312/MegaFusion
+"""
+Title: MegaFusion.py
+Modified by: Jiaan Yu
+
+Examples:
+  'MegaFusion.py'
+  --sample [String, sample id]
+  --fusion [File, Arriba fusion file]
+  --json [File, json file to parse ]
+  --tool_version '2.1.0'
+  --contig [File, contig file]
+  > 'output.vcf'
+Note: All the variants use "N" in REF and ALT column
+
+Example json file:
+Arriba_fusion.min.v1.json - for Arriba tsv conversion
+
+Example contig file
+##contig=<ID=1,length=249250621>
+##contig=<ID=2,length=243199373>
+##contig=<ID=3,length=198022430>
+
+"""
+
+
 import argparse
 import json
 

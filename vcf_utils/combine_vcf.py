@@ -17,6 +17,27 @@ Notes on how the columns are being parsed:
 -- GT: The only enfored column in FORMAT
 -- Other columns: extract_cols moves FORMAT column names to INFO; select_info finds column values from variants
 
+Examples:
+For Germline (or Tumour only) data
+combine_vcf.py
+  -i [File, GATK HaploytypeCaller vcf]
+  -i [File, Strelka vcf]
+  -i [File, Vardict]
+  --type 'germline'
+  --columns 'AC','AN','AF','AD','DP','GT'
+  -o [String, output filename]
+
+For Somatic paired data
+combine_vcf.py
+  -i [File, GATK HaploytypeCaller vcf]
+  -i [File, Strelka vcf]
+  -i [File, Vardict]
+  --type 'somatic'
+  --columns 'AD','DP','GT'
+  --normal [String, normal id]
+  --tumor [String, tumor id]
+  -o [String, output filename]
+
 A bug: Currently this script doesn't support output file in a directory that doesn't exist
 """
 
@@ -213,7 +234,7 @@ else:
             if callers_names[0] == 'strelka':
                 i = callers_indexes[-1]
             else:
-            	i = callers_indexes[0]
+                i = callers_indexes[0]
             combined_variant = Variant.combine_info(
                                vcf_list[i].variants[v_key], columns_to_keep,
                                callers_names, info_dict, somatic=True)
